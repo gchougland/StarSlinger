@@ -1,6 +1,6 @@
 # StarGrappler Mod
 
-A grappling hook mod for Hytale that adds exciting traversal mechanics with the Star Grappler, Star Nodes, and Galaxy in a Bottle.
+A grappling hook mod for Hytale that adds traversal mechanics with the Star Slinger, Astral Tethers, and Galaxy in a Bottle.
 
 ## Features
 
@@ -113,16 +113,12 @@ The project uses Gradle with the Hytale modding plugin. Configure your Hytale in
 hytale.install_dir=path/to/Hytale
 ```
 
-## Notes
-
-- Placeholder textures and icons need to be created for the items
-- Some World API calls are placeholders and may need adjustment based on actual Hytale API
-- Particle system IDs may need to be adjusted to match available particle systems in Hytale
-- Block placement and detection logic may need refinement based on actual World API capabilities
-
 ## License
 
-This mod is created for Hytale modding purposes.
+All rights reserved.
+
+This project is proprietary. No permission is granted to use, copy, modify, or distribute
+this code or its assets without explicit written permission from the author.
 
 ## Credits
 
