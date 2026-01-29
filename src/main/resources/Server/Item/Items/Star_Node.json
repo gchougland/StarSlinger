@@ -1,0 +1,67 @@
+{
+  "TranslationProperties": {
+    "Name": "server.items.Star_Node.name",
+    "Description": "server.items.Star_Node.description"
+  },
+  "ItemLevel": 1,
+  "Categories": [
+    "Blocks.Miscellaneous"
+  ],
+  "PlayerAnimationsId": "Block",
+  "Interactions": {
+    "Primary": "Block_Primary",
+    "Secondary": "Block_Secondary"
+  },
+  "BlockType": {
+    "Material": "Empty",
+    "DrawType": "Model",
+    "Opacity": "Transparent",
+    "BlockParticleSetId": "Crystal",
+    "BlockSoundSetId": "Glass",
+    "CustomModel": "Blocks/Astral_Tether.blockymodel",
+    "CustomModelTexture": [
+      {
+        "Texture": "Blocks/Astral_Tether.png",
+        "Weight": 1
+      }
+    ],
+    "Flags": {},
+    "Gathering": {
+      "Soft": {
+        "ItemId": "Star_Node",
+        "IsWeaponBreakable": false
+      },
+      "Tools": []
+    },
+    "ParticleColor": "#6c2274",
+    "Light": {
+      "Radius": 2,
+      "Color": "#a6b"
+    },
+    "HitboxType": "Star_Node",
+    "PlacementSettings": {
+      "PlaceInEmptyBlocks": true
+    },
+    "Support": {},
+    "CustomModelScale": 1
+  },
+  "IconProperties": {
+    "Scale": 0.7,
+    "Rotation": [
+      22.5,
+      91,
+      22.5
+    ],
+    "Translation": [
+      -6,
+      -13
+    ]
+  },
+  "Tags": {
+    "Type": [
+      "Block"
+    ]
+  },
+  "ItemSoundSetId": "ISS_Blocks_Soft",
+  "Icon": "Icons/ItemsGenerated/Star_Node.png"
+}

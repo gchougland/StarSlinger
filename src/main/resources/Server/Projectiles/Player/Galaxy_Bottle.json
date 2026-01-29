@@ -1,0 +1,35 @@
+{
+  "Appearance": "Galaxy_In_A_Bottle",
+  "VerticalCenterShot": 0.1,
+  "HorizontalCenterShot": 0.1,
+  "DepthShot": 1,
+  "PitchAdjustShot": false,
+  "SticksVertically": true,
+  "MuzzleVelocity": 18,
+  "TerminalVelocity": 18,
+  "Gravity": 20,
+  "Damage": 0,
+  "HitParticles": {
+    "SystemId": "Item_Break_GlassMagic"
+  },
+  "MissParticles": {
+    "SystemId": "Item_Break_GlassMagic"
+  },
+  "DeathParticles": {
+    "SystemId": "Item_Break_GlassMagic"
+  },
+  "DeathEffectsOnHit": true,
+  "BounceSoundEventId": "SFX_Crystal_Break",
+  "HitSoundEventId": "SFX_Crystal_Break",
+  "MissSoundEventId": "SFX_Crystal_Break",
+  "DeathSoundEventId": "SFX_Crystal_Break",
+  "DeadTimeMiss": 0,
+  "DeadTime": 0,
+  "ExplosionConfig": {
+    "DamageEntities": false,
+    "DamageBlocks": false,
+    "BlockDamageRadius": 0,
+    "EntityDamageRadius": 0,
+    "EntityDamageFalloff": 1.0
+  }
+}

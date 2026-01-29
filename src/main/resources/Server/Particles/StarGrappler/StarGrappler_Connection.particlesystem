@@ -1,0 +1,15 @@
+{
+  "Spawners": [
+    {
+      "SpawnerId": "StarGrappler_Line",
+      "FixedRotation": false
+    },
+    {
+      "SpawnerId": "StarGrappler_Sparkles",
+      "FixedRotation": false
+    }
+  ],
+  "CullDistance": 75.0,
+  "IsImportant": true,
+  "LifeSpan": 0.5
+}

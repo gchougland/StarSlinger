@@ -1,0 +1,124 @@
+{
+  "RenderMode": "Erosion",
+  "ParticleRotationInfluence": "BillboardVelocity",
+  "LinearFiltering": true,
+  "LightInfluence": 0,
+  "ParticleRotateWithSpawner": true,
+  "TrailSpawnerPositionMultiplier": 1.0,
+  "TrailSpawnerRotationMultiplier": 1.0,
+  "MaxConcurrentParticles": 300,
+  "ParticleLifeSpan": {
+    "Min": 0.3,
+    "Max": 0.4
+  },
+  "Particle": {
+    "Texture": "Particles/Textures/Basic/Glow_Direction.png",
+    "ScaleRatioConstraint": "OneToOne",
+    "UVOption": "None",
+    "Animation": {
+      "0": {
+        "FrameIndex": {
+          "Min": 0,
+          "Max": 0
+        },
+        "Opacity": 0.8,
+        "Color": "#a6b",
+        "Scale": {
+          "X": {
+            "Min": 0.3,
+            "Max": 0.4
+          },
+          "Y": {
+            "Min": 0.15,
+            "Max": 0.2
+          }
+        },
+        "Rotation": {
+          "Z": {
+            "Min": 0.0,
+            "Max": 0.0
+          }
+        }
+      },
+      "50": {
+        "Opacity": 1.0,
+        "Color": "#6c2274"
+      },
+      "100": {
+        "Opacity": 0.0,
+        "Color": "#8a2be2",
+        "Scale": {
+          "X": {
+            "Min": 0.2,
+            "Max": 0.2
+          },
+          "Y": {
+            "Min": 0.1,
+            "Max": 0.1
+          }
+        }
+      }
+    },
+    "InitialAnimationFrame": {
+      "Opacity": 0.8,
+      "FrameIndex": {
+        "Min": 0,
+        "Max": 0
+      },
+      "Scale": {
+        "X": {
+          "Min": 0.3,
+          "Max": 0.4
+        },
+        "Y": {
+          "Min": 0.15,
+          "Max": 0.2
+        }
+      },
+      "Color": "#a6b"
+    },
+    "SoftParticles": "Disable"
+  },
+  "SpawnRate": {
+    "Min": 100.0,
+    "Max": 150.0
+  },
+  "EmitOffset": {
+    "X": {
+      "Min": -0.05,
+      "Max": 0.05
+    },
+    "Y": {
+      "Min": -0.05,
+      "Max": 0.05
+    },
+    "Z": {
+      "Min": -0.05,
+      "Max": 0.05
+    }
+  },
+  "SpawnBurst": false,
+  "InitialVelocity": {
+    "Speed": {
+      "Min": 0.0,
+      "Max": 0.5
+    },
+    "Yaw": {
+      "Min": -10.0,
+      "Max": 10.0
+    },
+    "Pitch": {
+      "Min": -10.0,
+      "Max": 10.0
+    }
+  },
+  "Attractors": [
+    {
+      "DampingMultiplier": {
+        "X": 0.9,
+        "Y": 0.9,
+        "Z": 0.9
+      }
+    }
+  ]
+}

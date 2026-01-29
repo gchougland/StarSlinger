@@ -1,0 +1,57 @@
+{
+  "TranslationProperties": {
+    "Name": "server.items.Star_Grappler.name",
+    "Description": "server.items.Star_Grappler.description"
+  },
+  "Quality": "Rare",
+  "ItemLevel": 1,
+  "Categories": [
+    "Items.Tools"
+  ],
+  "PlayerAnimationsId": "Item",
+  "Interactions": {
+    "Primary": "Star_Grappler_Launch",
+    "Secondary": "Star_Grappler_Swing"
+  },
+  "BlockType": {
+    "DrawType": "Model",
+    "Opacity": "Transparent",
+    "CustomModel": "Items/Star_Slinger.blockymodel",
+    "CustomModelTexture": [
+      {
+        "Texture": "Items/Star_Slinger.png",
+        "Weight": 1
+      }
+    ],
+    "Group": "SeaLife",
+    "HitboxType": "Plant_Large",
+    "Flags": {
+      "IsStackable": false
+    },
+    "RandomRotation": "YawStep1",
+    "Gathering": {
+      "Soft": {}
+    },
+    "BlockParticleSetId": "Grass",
+    "CustomModelScale": 1.5
+  },
+  "MaxStack": 1,
+  "IconProperties": {
+    "Scale": 0.9,
+    "Rotation": [
+      23,
+      47,
+      44
+    ],
+    "Translation": [
+      -4,
+      1
+    ]
+  },
+  "Tags": {
+    "Type": [
+      "Tool"
+    ]
+  },
+  "Icon": "Icons/ItemsGenerated/Star_Grappler.png"
+}

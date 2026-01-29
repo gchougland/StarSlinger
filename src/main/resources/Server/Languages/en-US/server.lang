@@ -1,1 +1,8 @@
-items.Example_Block.name=Example Block
+items.Star_Grappler.name=Star Grappler
+items.Star_Grappler.description=A powerful grappling hook that can launch you toward Star Nodes or swing you like a rope.
+
+items.Star_Node.name=Star Node
+items.Star_Node.description=A mystical node of starlight that serves as a grapple point for the Star Grappler.
+
+items.Galaxy_In_Bottle.name=Galaxy in a Bottle
+items.Galaxy_In_Bottle.description=Throw this bottle to create a field of Star Nodes at the impact location.
