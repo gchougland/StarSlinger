@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.systems;
+package com.hexvane.starslinger.systems;
 
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -19,15 +19,15 @@ import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hexvane.stargrappler.components.StarGrapplerConnectionComponent;
+import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 
 import javax.annotation.Nonnull;
 
 /**
- * System that manages particle effects for Star Nodes and grappler connections.
+ * System that manages particle effects for Astral Tethers and grappler connections.
  */
-public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
+public class AstralTetherParticleSystem extends EntityTickingSystem<EntityStore> {
     private static final int PARTICLE_UPDATE_INTERVAL = 5; // Update particles every N ticks (reduced frequency to prevent over-spawning)
     private int tickCounter = 0;
 
@@ -36,7 +36,7 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
     public Query<EntityStore> getQuery() {
         return Query.and(
                 com.hypixel.hytale.server.core.entity.entities.Player.getComponentType(),
-                StarGrapplerConnectionComponent.getComponentType(),
+                StarSlingerConnectionComponent.getComponentType(),
                 TransformComponent.getComponentType()
         );
     }
@@ -49,12 +49,12 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
             @Nonnull Store<EntityStore> store,
             @Nonnull CommandBuffer<EntityStore> commandBuffer) {
         
-        StarGrapplerConnectionComponent connection = archetypeChunk.getComponent(
+        StarSlingerConnectionComponent connection = archetypeChunk.getComponent(
                 index,
-                StarGrapplerConnectionComponent.getComponentType()
+                StarSlingerConnectionComponent.getComponentType()
         );
         
-        if (connection == null || !connection.isConnected() || connection.getStarNodePosition() == null) {
+        if (connection == null || !connection.isConnected() || connection.getAstralTetherPosition() == null) {
             return;
         }
 
@@ -69,8 +69,8 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
         // Get world for debug line rendering
         World world = store.getExternalData().getWorld();
         
-        // Draw larger sphere at star node position every tick to ensure smooth visibility
-        drawEnlargedStarNode(connection.getStarNodePosition(), world);
+        // Draw larger sphere at astral tether position every tick to ensure smooth visibility
+        drawEnlargedAstralTether(connection.getAstralTetherPosition(), world);
 
         tickCounter++;
         if (tickCounter < PARTICLE_UPDATE_INTERVAL) {
@@ -83,12 +83,12 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
         Vector3d handPos = getHandPosition(playerRef, transform, commandBuffer);
 
         // Draw white line for the rope
-        drawRopeLine(handPos, connection.getStarNodePosition(), world);
+        drawRopeLine(handPos, connection.getAstralTetherPosition(), world);
 
         // Spawn particle trail from player hand to star node
         spawnGrapplerParticles(
                 handPos,
-                connection.getStarNodePosition(),
+                connection.getAstralTetherPosition(),
                 commandBuffer,
                 playerRef
         );
@@ -99,14 +99,14 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
      */
     private void spawnGrapplerParticles(
             Vector3d playerPos,
-            Vector3d starNodePos,
+            Vector3d astralTetherPos,
             CommandBuffer<EntityStore> commandBuffer,
             Ref<EntityStore> playerRef) {
         
         // Calculate direction and distance
-        double dx = starNodePos.x - playerPos.x;
-        double dy = starNodePos.y - playerPos.y;
-        double dz = starNodePos.z - playerPos.z;
+        double dx = astralTetherPos.x - playerPos.x;
+        double dy = astralTetherPos.y - playerPos.y;
+        double dz = astralTetherPos.z - playerPos.z;
         
         double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
         
@@ -130,13 +130,13 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
         ObjectList<Ref<EntityStore>> playerRefs = SpatialResource.getThreadLocalReferenceList();
         
         // Use custom Star Grappler connection particle system
-        String particleSystemId = "StarGrappler_Connection";
+        String particleSystemId = "StarSlinger_Connection";
         
         // Collect players once for all particles (more efficient)
         Vector3d midPoint = new Vector3d(
-                (playerPos.x + starNodePos.x) / 2.0,
-                (playerPos.y + starNodePos.y) / 2.0,
-                (playerPos.z + starNodePos.z) / 2.0
+                (playerPos.x + astralTetherPos.x) / 2.0,
+                (playerPos.y + astralTetherPos.y) / 2.0,
+                (playerPos.z + astralTetherPos.z) / 2.0
         );
         playerSpatialResource.getSpatialStructure().collect(midPoint, Math.max(75.0, distance + 10.0), playerRefs);
         
@@ -286,11 +286,11 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
     }
     
     /**
-     * Draws an enlarged sphere at the star node position to make it appear bigger when connected.
+     * Draws an enlarged sphere at the astral tether position to make it appear bigger when connected.
      * The sphere will disappear when the connection is released (not drawn when not connected).
      */
-    private void drawEnlargedStarNode(Vector3d starNodePos, World world) {
-        // Draw a larger sphere at the star node position
+    private void drawEnlargedAstralTether(Vector3d astralTetherPos, World world) {
+        // Draw a larger sphere at the astral tether position
         // Use white color to match the rope line and provide subtle visual feedback
         Vector3f starColor = new Vector3f(1.0f, 1.0f, 1.0f); // White color
         double scale = 0.6; // Make it appear larger (normal block is ~0.5, so this makes it ~0.6)
@@ -298,7 +298,7 @@ public class StarNodeParticleSystem extends EntityTickingSystem<EntityStore> {
         // Create matrix for the sphere
         Matrix4d matrix = new Matrix4d();
         matrix.identity();
-        matrix.translate(starNodePos);
+        matrix.translate(astralTetherPos);
         matrix.scale(scale, scale, scale);
         
         // Duration: 0.1 seconds - drawn every tick, so short duration is fine

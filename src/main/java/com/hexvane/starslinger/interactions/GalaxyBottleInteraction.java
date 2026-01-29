@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.interactions;
+package com.hexvane.starslinger.interactions;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -12,7 +12,7 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHa
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hexvane.stargrappler.util.StarNodePlacer;
+import com.hexvane.starslinger.util.AstralTetherPlacer;
 
 import javax.annotation.Nonnull;
 
@@ -56,7 +56,7 @@ public class GalaxyBottleInteraction extends SimpleInstantInteraction {
         
         // Placeholder: Generate star nodes around a position
         // This will need to be called from projectile hit handler
-        // StarNodePlacer.generateStarNodeField(world, impactX, impactY, impactZ);
+        // AstralTetherPlacer.generateStarNodeField(world, impactX, impactY, impactZ);
 
         context.getState().state = InteractionState.Finished;
     }

@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.components;
+package com.hexvane.starslinger.components;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.Codec;
@@ -12,28 +12,28 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Component to track Star Grappler connection state for a player.
+ * Component to track Star Slinger connection state for a player.
  */
-public class StarGrapplerConnectionComponent implements Component<EntityStore> {
+public class StarSlingerConnectionComponent implements Component<EntityStore> {
     @Override
     @Nonnull
     public Component<EntityStore> clone() {
-        StarGrapplerConnectionComponent cloned = new StarGrapplerConnectionComponent();
+        StarSlingerConnectionComponent cloned = new StarSlingerConnectionComponent();
         cloned.connected = this.connected;
         cloned.launchMode = this.launchMode;
-        cloned.starNodePosition = this.starNodePosition != null ? new Vector3d(this.starNodePosition.x, this.starNodePosition.y, this.starNodePosition.z) : null;
+        cloned.astralTetherPosition = this.astralTetherPosition != null ? new Vector3d(this.astralTetherPosition.x, this.astralTetherPosition.y, this.astralTetherPosition.z) : null;
         cloned.connectionTick = this.connectionTick;
         cloned.ropeLength = this.ropeLength;
         cloned.wasPastRopeLength = this.wasPastRopeLength;
         cloned.ticksSinceLastCorrection = this.ticksSinceLastCorrection;
         return cloned;
     }
-    private static ComponentType<EntityStore, StarGrapplerConnectionComponent> componentType;
+    private static ComponentType<EntityStore, StarSlingerConnectionComponent> componentType;
 
     @Nonnull
-    public static final BuilderCodec<StarGrapplerConnectionComponent> CODEC = BuilderCodec.builder(
-            StarGrapplerConnectionComponent.class,
-            StarGrapplerConnectionComponent::new
+    public static final BuilderCodec<StarSlingerConnectionComponent> CODEC = BuilderCodec.builder(
+            StarSlingerConnectionComponent.class,
+            StarSlingerConnectionComponent::new
     )
             .append(new KeyedCodec<>("Connected", Codec.BOOLEAN),
                     (c, v) -> c.connected = v,
@@ -43,32 +43,32 @@ public class StarGrapplerConnectionComponent implements Component<EntityStore> {
                     (c, v) -> c.launchMode = v,
                     c -> c.launchMode)
             .add()
-            .append(new KeyedCodec<>("StarNodeX", Codec.DOUBLE),
+            .append(new KeyedCodec<>("AstralTetherX", Codec.DOUBLE),
                     (c, v) -> {
-                        if (c.starNodePosition == null) {
-                            c.starNodePosition = new Vector3d();
+                        if (c.astralTetherPosition == null) {
+                            c.astralTetherPosition = new Vector3d();
                         }
-                        c.starNodePosition.x = v;
+                        c.astralTetherPosition.x = v;
                     },
-                    c -> c.starNodePosition != null ? c.starNodePosition.x : 0.0)
+                    c -> c.astralTetherPosition != null ? c.astralTetherPosition.x : 0.0)
             .add()
-            .append(new KeyedCodec<>("StarNodeY", Codec.DOUBLE),
+            .append(new KeyedCodec<>("AstralTetherY", Codec.DOUBLE),
                     (c, v) -> {
-                        if (c.starNodePosition == null) {
-                            c.starNodePosition = new Vector3d();
+                        if (c.astralTetherPosition == null) {
+                            c.astralTetherPosition = new Vector3d();
                         }
-                        c.starNodePosition.y = v;
+                        c.astralTetherPosition.y = v;
                     },
-                    c -> c.starNodePosition != null ? c.starNodePosition.y : 0.0)
+                    c -> c.astralTetherPosition != null ? c.astralTetherPosition.y : 0.0)
             .add()
-            .append(new KeyedCodec<>("StarNodeZ", Codec.DOUBLE),
+            .append(new KeyedCodec<>("AstralTetherZ", Codec.DOUBLE),
                     (c, v) -> {
-                        if (c.starNodePosition == null) {
-                            c.starNodePosition = new Vector3d();
+                        if (c.astralTetherPosition == null) {
+                            c.astralTetherPosition = new Vector3d();
                         }
-                        c.starNodePosition.z = v;
+                        c.astralTetherPosition.z = v;
                     },
-                    c -> c.starNodePosition != null ? c.starNodePosition.z : 0.0)
+                    c -> c.astralTetherPosition != null ? c.astralTetherPosition.z : 0.0)
             .add()
             .append(new KeyedCodec<>("ConnectionTick", Codec.INTEGER),
                     (c, v) -> c.connectionTick = v,
@@ -83,21 +83,21 @@ public class StarGrapplerConnectionComponent implements Component<EntityStore> {
     private boolean connected = false;
     private boolean launchMode = true; // true for launch, false for swing
     @Nullable
-    private Vector3d starNodePosition = null;
+    private Vector3d astralTetherPosition = null;
     private int connectionTick = 0; // Tick when connection was established (for button state check delay)
     private double ropeLength = 0.0; // Initial rope length for swing mode (distance when right-click was first pressed)
     private boolean wasPastRopeLength = false; // Hysteresis: track if we were past rope length last tick
     private int ticksSinceLastCorrection = 0; // Cooldown: don't correct every single tick
 
-    public StarGrapplerConnectionComponent() {
+    public StarSlingerConnectionComponent() {
     }
 
     @Nonnull
-    public static ComponentType<EntityStore, StarGrapplerConnectionComponent> getComponentType() {
+    public static ComponentType<EntityStore, StarSlingerConnectionComponent> getComponentType() {
         return componentType;
     }
 
-    public static void setComponentType(ComponentType<EntityStore, StarGrapplerConnectionComponent> type) {
+    public static void setComponentType(ComponentType<EntityStore, StarSlingerConnectionComponent> type) {
         componentType = type;
     }
 
@@ -118,12 +118,12 @@ public class StarGrapplerConnectionComponent implements Component<EntityStore> {
     }
 
     @Nullable
-    public Vector3d getStarNodePosition() {
-        return starNodePosition;
+    public Vector3d getAstralTetherPosition() {
+        return astralTetherPosition;
     }
 
-    public void setStarNodePosition(@Nullable Vector3d starNodePosition) {
-        this.starNodePosition = starNodePosition;
+    public void setAstralTetherPosition(@Nullable Vector3d astralTetherPosition) {
+        this.astralTetherPosition = astralTetherPosition;
     }
 
     public int getConnectionTick() {

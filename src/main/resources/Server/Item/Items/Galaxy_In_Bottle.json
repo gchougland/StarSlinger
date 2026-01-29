@@ -74,6 +74,36 @@
       "Potion"
     ]
   },
+  "Recipe": {
+    "TimeSeconds": 5,
+    "Input": [
+      {
+        "ItemId": "Potion_Empty",
+        "Quantity": 1
+      },
+      {
+        "ItemId": "Plant_Crop_Stamina2",
+        "Quantity": 1
+      },
+      {
+        "ItemId": "Plant_Crop_Health2",
+        "Quantity": 1
+      },
+      {
+        "ItemId": "Plant_Crop_Mana2",
+        "Quantity": 1
+      }
+    ],
+    "BenchRequirement": [
+      {
+        "Id": "Alchemybench",
+        "Type": "Crafting",
+        "Categories": [
+          "Alchemy_Potions_Misc"
+        ]
+      }
+    ]
+  },
   "Scale": 2,
   "MaxStack": 16,
   "IconProperties": {

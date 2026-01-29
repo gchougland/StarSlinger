@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.interactions;
+package com.hexvane.starslinger.interactions;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.KeyedCodec;
@@ -27,28 +27,29 @@ import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.protocol.SoundCategory;
-import com.hexvane.stargrappler.components.StarGrapplerConnectionComponent;
-import com.hexvane.stargrappler.util.StarNodeDetector;
+import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
+import com.hexvane.starslinger.util.AstralTetherDetector;
+import com.hexvane.starslinger.util.DebugLogger;
 
 import javax.annotation.Nonnull;
 
 /**
  * Interaction for left-click launch mechanic of the Star Grappler.
- * Launches the player toward the closest Star Node found along a sphere-swept raycast.
+ * Launches the player toward the closest Astral Tether found along a sphere-swept raycast.
  * Uses ChargingInteraction to stay active while button is held.
  */
-public class StarGrapplerLaunchInteraction extends ChargingInteraction {
+public class StarSlingerLaunchInteraction extends ChargingInteraction {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     
     @Nonnull
-    public static final BuilderCodec<StarGrapplerLaunchInteraction> CODEC = BuilderCodec.builder(
-            StarGrapplerLaunchInteraction.class, 
-            StarGrapplerLaunchInteraction::new, 
+    public static final BuilderCodec<StarSlingerLaunchInteraction> CODEC = BuilderCodec.builder(
+            StarSlingerLaunchInteraction.class, 
+            StarSlingerLaunchInteraction::new, 
             ChargingInteraction.ABSTRACT_CODEC
     )
     .build();
 
-    public StarGrapplerLaunchInteraction() {
+    public StarSlingerLaunchInteraction() {
         super();
         // Allow indefinite hold - interaction stays active while button is held
         this.allowIndefiniteHold = true;
@@ -79,13 +80,13 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
         // Handle connection establishment on first run (server side)
         if (firstRun) {
         
-        LOGGER.atInfo().log("[StarGrapplerLaunch] Interaction started, type: %s", type);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Interaction started, type: %s", type);
         
         Ref<EntityStore> entityRef = context.getOwningEntity();
         CommandBuffer<EntityStore> commandBuffer = context.getCommandBuffer();
 
         if (commandBuffer == null) {
-            LOGGER.atWarning().log("[StarGrapplerLaunch] CommandBuffer is null");
+            LOGGER.atWarning().log("[StarSlingerLaunch] CommandBuffer is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -93,7 +94,7 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
         // Get player component
         Player playerComponent = commandBuffer.getComponent(entityRef, Player.getComponentType());
         if (playerComponent == null) {
-            LOGGER.atWarning().log("[StarGrapplerLaunch] Player component is null");
+            LOGGER.atWarning().log("[StarSlingerLaunch] Player component is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -101,18 +102,18 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
         // Get transform component
         TransformComponent transformComponent = commandBuffer.getComponent(entityRef, TransformComponent.getComponentType());
         if (transformComponent == null) {
-            LOGGER.atWarning().log("[StarGrapplerLaunch] Transform component is null");
+            LOGGER.atWarning().log("[StarSlingerLaunch] Transform component is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
 
         // Check if already connected - if so, don't search again
-        StarGrapplerConnectionComponent existingConnection = commandBuffer.getComponent(
+        StarSlingerConnectionComponent existingConnection = commandBuffer.getComponent(
                 entityRef,
-                StarGrapplerConnectionComponent.getComponentType()
+                StarSlingerConnectionComponent.getComponentType()
         );
         if (existingConnection != null && existingConnection.isConnected()) {
-            LOGGER.atInfo().log("[StarGrapplerLaunch] Already connected to node, skipping search");
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Already connected to node, skipping search");
             context.getState().state = InteractionState.Finished;
             return;
         }
@@ -120,7 +121,7 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
         // Get world
         World world = commandBuffer.getStore().getExternalData().getWorld();
         if (world == null) {
-            LOGGER.atWarning().log("[StarGrapplerLaunch] World is null");
+            LOGGER.atWarning().log("[StarSlingerLaunch] World is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -128,7 +129,7 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
         // Get client state for raycast data
         InteractionSyncData clientState = context.getClientState();
         if (clientState == null) {
-            LOGGER.atWarning().log("[StarGrapplerLaunch] Client state is null");
+            LOGGER.atWarning().log("[StarSlingerLaunch] Client state is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -137,7 +138,7 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
         Direction lookDirection = clientState.attackerRot;
         boolean isFromClient = true;
         if (lookDirection == null) {
-            LOGGER.atInfo().log("[StarGrapplerLaunch] Client look direction is null, using HeadRotation component");
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Client look direction is null, using HeadRotation component");
             // Use HeadRotation component for actual head/eye look direction (not body rotation)
             HeadRotation headRotation = commandBuffer.getComponent(entityRef, HeadRotation.getComponentType());
             if (headRotation != null) {
@@ -146,18 +147,18 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
                 // Direction stores: yaw, pitch, roll
                 lookDirection = new Direction(headRot.getYaw(), headRot.getPitch(), headRot.getRoll());
                 isFromClient = false; // This Direction is from Vector3f, so it's in radians
-                LOGGER.atInfo().log("[StarGrapplerLaunch] Using HeadRotation: yaw=%.2f rad (%.2f°), pitch=%.2f rad (%.2f°)", 
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Using HeadRotation: yaw=%.2f rad (%.2f°), pitch=%.2f rad (%.2f°)", 
                         headRot.getYaw(), Math.toDegrees(headRot.getYaw()), 
                         headRot.getPitch(), Math.toDegrees(headRot.getPitch()));
             } else {
                 // Fallback to transform rotation if HeadRotation not available
-                LOGGER.atWarning().log("[StarGrapplerLaunch] HeadRotation not found, falling back to transform rotation");
+                LOGGER.atWarning().log("[StarSlingerLaunch] HeadRotation not found, falling back to transform rotation");
                 com.hypixel.hytale.math.vector.Vector3f rotation = transformComponent.getRotation();
                 lookDirection = new Direction(rotation.getYaw(), rotation.getPitch(), rotation.getRoll());
                 isFromClient = false;
             }
         } else {
-            LOGGER.atInfo().log("[StarGrapplerLaunch] Using client look direction: yaw=%.2f, pitch=%.2f (assuming degrees)", 
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Using client look direction: yaw=%.2f, pitch=%.2f (assuming degrees)", 
                     lookDirection.yaw, lookDirection.pitch);
         }
 
@@ -165,11 +166,11 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
         // Use TargetUtil.getLook() which calculates eye position correctly
         com.hypixel.hytale.math.vector.Transform lookTransform = TargetUtil.getLook(entityRef, commandBuffer);
         Vector3d eyePos = lookTransform.getPosition();
-        LOGGER.atInfo().log("[StarGrapplerLaunch] Eye position: %.2f, %.2f, %.2f", eyePos.x, eyePos.y, eyePos.z);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Eye position: %.2f, %.2f, %.2f", eyePos.x, eyePos.y, eyePos.z);
 
-        // Find closest Star Node using sphere-swept raycast
-        LOGGER.atInfo().log("[StarGrapplerLaunch] Searching for Star Node...");
-        Vector3d starNodePos = StarNodeDetector.findClosestStarNode(
+        // Find closest Astral Tether using sphere-swept raycast
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Searching for Astral Tether...");
+        Vector3d astralTetherPos = AstralTetherDetector.findClosestAstralTether(
                 entityRef,
                 eyePos, // Use eye position instead of transform component
                 world,
@@ -178,22 +179,22 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
                 isFromClient
         );
 
-        if (starNodePos == null) {
-            // No Star Node found
-            LOGGER.atInfo().log("[StarGrapplerLaunch] No Star Node found");
+        if (astralTetherPos == null) {
+            // No Astral Tether found
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] No Astral Tether found");
             context.getState().state = InteractionState.Failed;
             return;
         }
         
-        LOGGER.atInfo().log("[StarGrapplerLaunch] Found Star Node at: %.2f, %.2f, %.2f", starNodePos.x, starNodePos.y, starNodePos.z);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Found Astral Tether at: %.2f, %.2f, %.2f", astralTetherPos.x, astralTetherPos.y, astralTetherPos.z);
 
         // Store connection state - the system will apply continuous force
-        StarGrapplerConnectionComponent connectionComponent = commandBuffer.ensureAndGetComponent(
+        StarSlingerConnectionComponent connectionComponent = commandBuffer.ensureAndGetComponent(
                 entityRef,
-                StarGrapplerConnectionComponent.getComponentType()
+                StarSlingerConnectionComponent.getComponentType()
         );
         connectionComponent.setLaunchMode(true);
-        connectionComponent.setStarNodePosition(starNodePos);
+        connectionComponent.setAstralTetherPosition(astralTetherPos);
         connectionComponent.setConnected(true);
         connectionComponent.setConnectionTick(0); // Initialize to 0, system will track ticks
         
@@ -216,16 +217,16 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
                         1.0f, // pitchModifier
                         commandBuffer
                 );
-                LOGGER.atInfo().log("[StarGrapplerLaunch] Played hook sound (SFX_Staff_Fire_Shoot) at player position");
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Played hook sound (SFX_Staff_Fire_Shoot) at player position");
             } else {
-                LOGGER.atWarning().log("[StarGrapplerLaunch] Sound event SFX_Staff_Fire_Shoot not found");
+                LOGGER.atWarning().log("[StarSlingerLaunch] Sound event SFX_Staff_Fire_Shoot not found");
             }
         } catch (Exception e) {
-            LOGGER.atWarning().withCause(e).log("[StarGrapplerLaunch] Failed to play hook sound");
+            LOGGER.atWarning().withCause(e).log("[StarSlingerLaunch] Failed to play hook sound");
         }
         
-        LOGGER.atInfo().log("[StarGrapplerLaunch] Connection established - system will apply continuous force toward node at %.2f, %.2f, %.2f", 
-                starNodePos.x, starNodePos.y, starNodePos.z);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Connection established - system will apply continuous force toward node at %.2f, %.2f, %.2f", 
+                astralTetherPos.x, astralTetherPos.y, astralTetherPos.z);
         }
         
         // Check if button was released based on client data
@@ -234,12 +235,12 @@ public class StarGrapplerLaunchInteraction extends ChargingInteraction {
             // Button released - unhook
             Ref<EntityStore> ref = context.getEntity();
             CommandBuffer<EntityStore> commandBuffer = context.getCommandBuffer();
-            StarGrapplerConnectionComponent connection = commandBuffer.getComponent(
+            StarSlingerConnectionComponent connection = commandBuffer.getComponent(
                     ref,
-                    StarGrapplerConnectionComponent.getComponentType()
+                    StarSlingerConnectionComponent.getComponentType()
             );
             if (connection != null && connection.isConnected()) {
-                LOGGER.atInfo().log("[StarGrapplerLaunch] Button released (server tick), unhooking");
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Button released (server tick), unhooking");
                 connection.setConnected(false);
             }
         }

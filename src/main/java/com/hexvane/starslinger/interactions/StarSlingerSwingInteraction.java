@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.interactions;
+package com.hexvane.starslinger.interactions;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -24,8 +24,9 @@ import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.protocol.SoundCategory;
-import com.hexvane.stargrappler.components.StarGrapplerConnectionComponent;
-import com.hexvane.stargrappler.util.StarNodeDetector;
+import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
+import com.hexvane.starslinger.util.AstralTetherDetector;
+import com.hexvane.starslinger.util.DebugLogger;
 
 import javax.annotation.Nonnull;
 
@@ -34,18 +35,18 @@ import javax.annotation.Nonnull;
  * Hooks onto a Star Node and allows swinging like a rope/pendulum.
  * Uses ChargingInteraction to stay active while button is held.
  */
-public class StarGrapplerSwingInteraction extends ChargingInteraction {
+public class StarSlingerSwingInteraction extends ChargingInteraction {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     
     @Nonnull
-    public static final BuilderCodec<StarGrapplerSwingInteraction> CODEC = BuilderCodec.builder(
-            StarGrapplerSwingInteraction.class, 
-            StarGrapplerSwingInteraction::new, 
+    public static final BuilderCodec<StarSlingerSwingInteraction> CODEC = BuilderCodec.builder(
+            StarSlingerSwingInteraction.class, 
+            StarSlingerSwingInteraction::new, 
             ChargingInteraction.ABSTRACT_CODEC
     )
     .build();
 
-    public StarGrapplerSwingInteraction() {
+    public StarSlingerSwingInteraction() {
         super();
         // Allow indefinite hold - interaction stays active while button is held
         this.allowIndefiniteHold = true;
@@ -75,13 +76,13 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
         // Handle connection establishment on first run (server side)
         if (firstRun) {
         
-        LOGGER.atInfo().log("[StarGrapplerSwing] Interaction started, type: %s", type);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Interaction started, type: %s", type);
         
         Ref<EntityStore> entityRef = context.getOwningEntity();
         CommandBuffer<EntityStore> commandBuffer = context.getCommandBuffer();
 
         if (commandBuffer == null) {
-            LOGGER.atWarning().log("[StarGrapplerSwing] CommandBuffer is null");
+            LOGGER.atWarning().log("[StarSlingerSwing] CommandBuffer is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -89,7 +90,7 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
         // Get player component
         Player playerComponent = commandBuffer.getComponent(entityRef, Player.getComponentType());
         if (playerComponent == null) {
-            LOGGER.atWarning().log("[StarGrapplerSwing] Player component is null");
+            LOGGER.atWarning().log("[StarSlingerSwing] Player component is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -97,18 +98,18 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
         // Get transform component
         TransformComponent transformComponent = commandBuffer.getComponent(entityRef, TransformComponent.getComponentType());
         if (transformComponent == null) {
-            LOGGER.atWarning().log("[StarGrapplerSwing] Transform component is null");
+            LOGGER.atWarning().log("[StarSlingerSwing] Transform component is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
 
         // Check if already connected - if so, don't search again
-        StarGrapplerConnectionComponent existingConnection = commandBuffer.getComponent(
+        StarSlingerConnectionComponent existingConnection = commandBuffer.getComponent(
                 entityRef,
-                StarGrapplerConnectionComponent.getComponentType()
+                StarSlingerConnectionComponent.getComponentType()
         );
         if (existingConnection != null && existingConnection.isConnected()) {
-            LOGGER.atInfo().log("[StarGrapplerSwing] Already connected to node, skipping search");
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Already connected to node, skipping search");
             context.getState().state = InteractionState.Finished;
             return;
         }
@@ -116,7 +117,7 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
         // Get world
         World world = commandBuffer.getStore().getExternalData().getWorld();
         if (world == null) {
-            LOGGER.atWarning().log("[StarGrapplerSwing] World is null");
+            LOGGER.atWarning().log("[StarSlingerSwing] World is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -124,7 +125,7 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
         // Get client state for raycast data
         InteractionSyncData clientState = context.getClientState();
         if (clientState == null) {
-            LOGGER.atWarning().log("[StarGrapplerSwing] Client state is null");
+            LOGGER.atWarning().log("[StarSlingerSwing] Client state is null");
             context.getState().state = InteractionState.Failed;
             return;
         }
@@ -133,7 +134,7 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
         Direction lookDirection = clientState.attackerRot;
         boolean isFromClient = true;
         if (lookDirection == null) {
-            LOGGER.atInfo().log("[StarGrapplerSwing] Client look direction is null, using HeadRotation component");
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Client look direction is null, using HeadRotation component");
             HeadRotation headRotation = commandBuffer.getComponent(entityRef, HeadRotation.getComponentType());
             if (headRotation != null) {
                 com.hypixel.hytale.math.vector.Vector3f headRot = headRotation.getRotation();
@@ -149,11 +150,11 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
         // Get eye position for raycast start
         com.hypixel.hytale.math.vector.Transform lookTransform = TargetUtil.getLook(entityRef, commandBuffer);
         Vector3d eyePos = lookTransform.getPosition();
-        LOGGER.atInfo().log("[StarGrapplerSwing] Eye position: %.2f, %.2f, %.2f", eyePos.x, eyePos.y, eyePos.z);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Eye position: %.2f, %.2f, %.2f", eyePos.x, eyePos.y, eyePos.z);
 
-        // Find closest Star Node using sphere-swept raycast
-        LOGGER.atInfo().log("[StarGrapplerSwing] Searching for Star Node...");
-        Vector3d starNodePos = StarNodeDetector.findClosestStarNode(
+        // Find closest Astral Tether using sphere-swept raycast
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Searching for Astral Tether...");
+        Vector3d astralTetherPos = AstralTetherDetector.findClosestAstralTether(
                 entityRef,
                 eyePos,
                 world,
@@ -162,34 +163,34 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
                 isFromClient
         );
 
-        if (starNodePos == null) {
-            // No Star Node found
-            LOGGER.atInfo().log("[StarGrapplerSwing] No Star Node found");
+        if (astralTetherPos == null) {
+            // No Astral Tether found
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] No Astral Tether found");
             context.getState().state = InteractionState.Failed;
             return;
         }
         
-        LOGGER.atInfo().log("[StarGrapplerSwing] Found Star Node at: %.2f, %.2f, %.2f", starNodePos.x, starNodePos.y, starNodePos.z);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Found Astral Tether at: %.2f, %.2f, %.2f", astralTetherPos.x, astralTetherPos.y, astralTetherPos.z);
 
         // Calculate initial rope length (distance when first hooking on)
         Vector3d playerPos = transformComponent.getPosition();
-        double dx = starNodePos.x - playerPos.x;
-        double dy = starNodePos.y - playerPos.y;
-        double dz = starNodePos.z - playerPos.z;
+        double dx = astralTetherPos.x - playerPos.x;
+        double dy = astralTetherPos.y - playerPos.y;
+        double dz = astralTetherPos.z - playerPos.z;
         double actualDistance = Math.sqrt(dx * dx + dy * dy + dz * dz);
         
         // Rope length is 50% of initial distance, minimum 2 blocks
         double initialRopeLength = Math.max(2.0, actualDistance * 0.7);
         
-        LOGGER.atInfo().log("[StarGrapplerSwing] Calculated rope length: %.2f (from distance: %.2f)", initialRopeLength, actualDistance);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Calculated rope length: %.2f (from distance: %.2f)", initialRopeLength, actualDistance);
 
         // Store connection state - the system will apply pendulum physics
-        StarGrapplerConnectionComponent connectionComponent = commandBuffer.ensureAndGetComponent(
+        StarSlingerConnectionComponent connectionComponent = commandBuffer.ensureAndGetComponent(
                 entityRef,
-                StarGrapplerConnectionComponent.getComponentType()
+                StarSlingerConnectionComponent.getComponentType()
         );
         connectionComponent.setLaunchMode(false); // Swing mode
-        connectionComponent.setStarNodePosition(starNodePos);
+        connectionComponent.setAstralTetherPosition(astralTetherPos);
         connectionComponent.setRopeLength(initialRopeLength);
         connectionComponent.setConnected(true);
         connectionComponent.setConnectionTick(0);
@@ -213,15 +214,15 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
                         1.0f, // pitchModifier
                         commandBuffer
                 );
-                LOGGER.atInfo().log("[StarGrapplerSwing] Played hook sound (SFX_Staff_Fire_Shoot) at player position");
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Played hook sound (SFX_Staff_Fire_Shoot) at player position");
             } else {
-                LOGGER.atWarning().log("[StarGrapplerSwing] Sound event SFX_Staff_Fire_Shoot not found");
+                LOGGER.atWarning().log("[StarSlingerSwing] Sound event SFX_Staff_Fire_Shoot not found");
             }
         } catch (Exception e) {
-            LOGGER.atWarning().withCause(e).log("[StarGrapplerSwing] Failed to play hook sound");
+            LOGGER.atWarning().withCause(e).log("[StarSlingerSwing] Failed to play hook sound");
         }
         
-        LOGGER.atInfo().log("[StarGrapplerSwing] Connection established - system will apply pendulum physics with rope length %.2f", initialRopeLength);
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Connection established - system will apply pendulum physics with rope length %.2f", initialRopeLength);
         }
         
         // Check if button was released based on client data
@@ -230,12 +231,12 @@ public class StarGrapplerSwingInteraction extends ChargingInteraction {
             // Button released - unhook
             Ref<EntityStore> ref = context.getEntity();
             CommandBuffer<EntityStore> commandBuffer = context.getCommandBuffer();
-            StarGrapplerConnectionComponent connection = commandBuffer.getComponent(
+            StarSlingerConnectionComponent connection = commandBuffer.getComponent(
                     ref,
-                    StarGrapplerConnectionComponent.getComponentType()
+                    StarSlingerConnectionComponent.getComponentType()
             );
             if (connection != null && connection.isConnected()) {
-                LOGGER.atInfo().log("[StarGrapplerSwing] Button released (server tick), unhooking");
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Button released (server tick), unhooking");
                 connection.setConnected(false);
             }
         }

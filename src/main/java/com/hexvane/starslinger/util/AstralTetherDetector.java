@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.util;
+package com.hexvane.starslinger.util;
 
 import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.math.vector.Vector3d;
@@ -11,28 +11,29 @@ import com.hypixel.hytale.server.core.modules.entity.component.TransformComponen
 import com.hypixel.hytale.server.core.modules.physics.util.PhysicsMath;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.universe.world.World;
+import com.hexvane.starslinger.util.DebugLogger;
 import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
 import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.ComponentAccessor;
-import com.hypixel.hytale.component.ComponentAccessor;
+import com.hexvane.starslinger.util.DebugLogger;
 
 import javax.annotation.Nullable;
 
 /**
- * Utility class for detecting Star Nodes using sphere-swept raycast.
+ * Utility class for detecting Astral Tethers using sphere-swept raycast.
  * Casts a ray 20 blocks in length with a 5 block radius along the path.
  */
-public class StarNodeDetector {
+public class AstralTetherDetector {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     private static final float RAY_LENGTH = 20.0f;
     private static final float DETECTION_RADIUS = 3.0f;
     private static final float SAMPLE_INTERVAL = 0.5f;
-    private static final String STAR_NODE_ITEM_ID = "Star_Node";
+    private static final String ASTRAL_TETHER_ITEM_ID = "Astral_Tether";
 
     /**
-     * Finds the closest Star Node along a sphere-swept raycast from the player's position and look direction.
+     * Finds the closest Astral Tether along a sphere-swept raycast from the player's position and look direction.
      * 
      * @param playerRef Reference to the player entity
      * @param startPos Starting position for the raycast (typically eye/hand position)
@@ -40,10 +41,10 @@ public class StarNodeDetector {
      * @param lookDirection Look direction (yaw/pitch)
      * @param componentAccessor Component accessor for accessing components
      * @param isFromClient Whether the look direction is from client (degrees) or server (radians)
-     * @return Position of the closest Star Node found, or null if none found
+     * @return Position of the closest Astral Tether found, or null if none found
      */
     @Nullable
-    public static Vector3d findClosestStarNode(
+    public static Vector3d findClosestAstralTether(
             Ref<EntityStore> playerRef,
             Vector3d startPos,
             World world,
@@ -54,7 +55,7 @@ public class StarNodeDetector {
         Vector3d playerPos = startPos;
         Vector3f direction = calculateLookDirection(lookDirection, isFromClient);
         
-        LOGGER.atInfo().log("[StarNodeDetector] Starting search from player pos %.2f,%.2f,%.2f with direction %.2f,%.2f,%.2f", 
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Starting search from player pos %.2f,%.2f,%.2f with direction %.2f,%.2f,%.2f", 
                 playerPos.x, playerPos.y, playerPos.z, direction.x, direction.y, direction.z);
         
         // Sample points along the ray
@@ -62,7 +63,7 @@ public class StarNodeDetector {
         Vector3d closestNodePos = null;
         
         int numSamples = (int) (RAY_LENGTH / SAMPLE_INTERVAL);
-        LOGGER.atInfo().log("[StarNodeDetector] Sampling %d points along ray (length: %.2f, radius: %.2f)", 
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Sampling %d points along ray (length: %.2f, radius: %.2f)", 
                 numSamples, RAY_LENGTH, DETECTION_RADIUS);
         
         // Don't spawn debug particles here - only spawn when a node is actually found
@@ -79,7 +80,7 @@ public class StarNodeDetector {
             );
             
             // Check for star nodes within radius at this sample point
-            Vector3d nodePos = findStarNodeInRadius(world, samplePoint, DETECTION_RADIUS);
+            Vector3d nodePos = findAstralTetherInRadius(world, samplePoint, DETECTION_RADIUS);
             samplesChecked++;
             
             if (nodePos != null) {
@@ -90,7 +91,7 @@ public class StarNodeDetector {
                     Math.pow(nodePos.z - playerPos.z, 2)
                 );
                 
-                LOGGER.atInfo().log("[StarNodeDetector] Found candidate at %.2f,%.2f,%.2f (distance from player: %.2f, sample point: %.2f,%.2f,%.2f)", 
+                DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Found candidate at %.2f,%.2f,%.2f (distance from player: %.2f, sample point: %.2f,%.2f,%.2f)", 
                         nodePos.x, nodePos.y, nodePos.z, distance, samplePoint.x, samplePoint.y, samplePoint.z);
                 
                 if (distance < closestDistance) {
@@ -100,10 +101,10 @@ public class StarNodeDetector {
             }
         }
         
-        LOGGER.atInfo().log("[StarNodeDetector] Checked %d samples, found %d nodes, closest node: %s", 
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Checked %d samples, found %d nodes, closest node: %s", 
                 samplesChecked, nodesFound, closestNodePos != null ? String.format("%.2f,%.2f,%.2f", closestNodePos.x, closestNodePos.y, closestNodePos.z) : "null");
         
-        // Don't spawn debug particles - connection particles are handled by StarNodeParticleSystem
+        // Don't spawn debug particles - connection particles are handled by AstralTetherParticleSystem
         // when a connection is actually established
         
         return closestNodePos;
@@ -130,13 +131,13 @@ public class StarNodeDetector {
             // Direction from client protocol is in degrees
             yawRad = (float) Math.toRadians(direction.yaw);
             pitchRad = (float) Math.toRadians(direction.pitch);
-            LOGGER.atInfo().log("[StarNodeDetector] Converting from degrees: yaw=%.2f° -> %.2f rad, pitch=%.2f° -> %.2f rad", 
+            DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Converting from degrees: yaw=%.2f° -> %.2f rad, pitch=%.2f° -> %.2f rad", 
                     direction.yaw, yawRad, direction.pitch, pitchRad);
         } else {
             // Direction from Vector3f is already in radians
             yawRad = direction.yaw;
             pitchRad = direction.pitch;
-            LOGGER.atInfo().log("[StarNodeDetector] Using radians directly: yaw=%.2f rad (%.2f°), pitch=%.2f rad (%.2f°)", 
+            DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Using radians directly: yaw=%.2f rad (%.2f°), pitch=%.2f rad (%.2f°)", 
                     yawRad, Math.toDegrees(yawRad), pitchRad, Math.toDegrees(pitchRad));
         }
         
@@ -144,22 +145,22 @@ public class StarNodeDetector {
         Vector3d directionVec = new Vector3d();
         PhysicsMath.vectorFromAngles(yawRad, pitchRad, directionVec);
         
-        LOGGER.atInfo().log("[StarNodeDetector] Calculated direction vector: %.3f,%.3f,%.3f", 
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Calculated direction vector: %.3f,%.3f,%.3f", 
                 directionVec.x, directionVec.y, directionVec.z);
         
         return new Vector3f((float)directionVec.x, (float)directionVec.y, (float)directionVec.z);
     }
 
     /**
-     * Searches for a Star Node block within the specified radius of the given position.
+     * Searches for a Astral Tether block within the specified radius of the given position.
      * 
      * @param world World instance
      * @param center Center position to search around
      * @param radius Search radius
-     * @return Position of a Star Node if found, null otherwise
+     * @return Position of a Astral Tether if found, null otherwise
      */
     @Nullable
-    private static Vector3d findStarNodeInRadius(World world, Vector3d center, float radius) {
+    private static Vector3d findAstralTetherInRadius(World world, Vector3d center, float radius) {
         int centerX = (int) Math.floor(center.x);
         int centerY = (int) Math.floor(center.y);
         int centerZ = (int) Math.floor(center.z);
@@ -178,9 +179,9 @@ public class StarNodeDetector {
                     double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
                     
                     if (distance <= radius) {
-                        // Check if this block is a Star Node
-                        if (isStarNode(world, x, y, z)) {
-                            LOGGER.atInfo().log("[StarNodeDetector] Found Star Node in radius at %d,%d,%d (distance from center: %.2f)", 
+                        // Check if this block is a Astral Tether
+                        if (isAstralTether(world, x, y, z)) {
+                            DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Found Astral Tether in radius at %d,%d,%d (distance from center: %.2f)", 
                                     x, y, z, distance);
                             return new Vector3d(x + 0.5, y + 0.5, z + 0.5); // Center of block
                         }
@@ -193,9 +194,9 @@ public class StarNodeDetector {
     }
 
     /**
-     * Checks if the block at the given coordinates is a Star Node.
+     * Checks if the block at the given coordinates is a Astral Tether.
      */
-    private static boolean isStarNode(World world, int x, int y, int z) {
+    private static boolean isAstralTether(World world, int x, int y, int z) {
         try {
             // Get chunk for this block position
             long chunkIndex = ChunkUtil.indexChunkFromBlock(x, z);
@@ -215,31 +216,31 @@ public class StarNodeDetector {
             
             String blockTypeId = blockType.getId();
             
-            // Check if this block type corresponds to Star_Node item
-            // Get Star Node item and check if its blockId matches
-            Item starNodeItem = Item.getAssetMap().getAsset(STAR_NODE_ITEM_ID);
-            if (starNodeItem == null || starNodeItem.getBlockId() == null) {
-                LOGGER.atWarning().log("[StarNodeDetector] Star Node item not found or has no blockId");
+            // Check if this block type corresponds to Astral_Tether item
+            // Get Astral Tether item and check if its blockId matches
+            Item astralTetherItem = Item.getAssetMap().getAsset(ASTRAL_TETHER_ITEM_ID);
+            if (astralTetherItem == null || astralTetherItem.getBlockId() == null) {
+                LOGGER.atWarning().log("[AstralTetherDetector] Astral Tether item not found or has no blockId");
                 return false;
             }
             
-            String starNodeBlockId = starNodeItem.getBlockId();
+            String astralTetherBlockId = astralTetherItem.getBlockId();
             
             // Get block type from blockId and compare
-            BlockType starNodeBlockType = BlockType.getAssetMap().getAsset(starNodeBlockId);
-            if (starNodeBlockType == null) {
-                LOGGER.atWarning().log("[StarNodeDetector] Star Node block type not found for id: %s", starNodeBlockId);
+            BlockType astralTetherBlockType = BlockType.getAssetMap().getAsset(astralTetherBlockId);
+            if (astralTetherBlockType == null) {
+                LOGGER.atWarning().log("[AstralTetherDetector] Astral Tether block type not found for id: %s", astralTetherBlockId);
                 return false;
             }
             
             // Compare block types by ID
-            boolean isMatch = blockTypeId.equals(starNodeBlockType.getId());
+            boolean isMatch = blockTypeId.equals(astralTetherBlockType.getId());
             if (isMatch) {
-                LOGGER.atInfo().log("[StarNodeDetector] Found Star Node at %d,%d,%d (blockId: %s)", x, y, z, blockTypeId);
+                DebugLogger.debugInfo(LOGGER, "[AstralTetherDetector] Found Astral Tether at %d,%d,%d (blockId: %s)", x, y, z, blockTypeId);
             }
             return isMatch;
         } catch (Exception e) {
-            LOGGER.atWarning().withCause(e).log("[StarNodeDetector] Exception checking block at %d,%d,%d", x, y, z);
+            LOGGER.atWarning().withCause(e).log("[AstralTetherDetector] Exception checking block at %d,%d,%d", x, y, z);
             // If any error occurs, assume it's not a star node
             return false;
         }
@@ -261,10 +262,10 @@ public class StarNodeDetector {
                 );
                 
                 // Spawn a visible particle to show the ray (use a simple glow particle for debug)
-                ParticleUtil.spawnParticleEffect("StarGrappler_Connection", particlePos, componentAccessor);
+                ParticleUtil.spawnParticleEffect("StarSlinger_Connection", particlePos, componentAccessor);
             }
         } catch (Exception e) {
-            LOGGER.atFine().log("[StarNodeDetector] Error spawning debug visual: %s", e.getMessage());
+            LOGGER.atFine().log("[AstralTetherDetector] Error spawning debug visual: %s", e.getMessage());
         }
     }
 }

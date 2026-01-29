@@ -1,7 +1,7 @@
 {
   "TranslationProperties": {
-    "Name": "server.items.Star_Grappler.name",
-    "Description": "server.items.Star_Grappler.description"
+    "Name": "server.items.Star_Slinger.name",
+    "Description": "server.items.Star_Slinger.description"
   },
   "Quality": "Rare",
   "ItemLevel": 1,
@@ -10,8 +10,8 @@
   ],
   "PlayerAnimationsId": "Item",
   "Interactions": {
-    "Primary": "Star_Grappler_Launch",
-    "Secondary": "Star_Grappler_Swing"
+    "Primary": "Star_Slinger_Launch",
+    "Secondary": "Star_Slinger_Swing"
   },
   "BlockType": {
     "DrawType": "Model",
@@ -53,5 +53,31 @@
       "Tool"
     ]
   },
-  "Icon": "Icons/ItemsGenerated/Star_Grappler.png"
+  "Recipe": {
+    "TimeSeconds": 5,
+    "Input": [
+      {
+        "ItemId": "Ingredient_Bar_Cobalt",
+        "Quantity": 4
+      },
+      {
+        "ItemId": "Ingredient_Bar_Adamantite",
+        "Quantity": 4
+      },
+      {
+        "ItemId": "Ingredient_Leather_Medium",
+        "Quantity": 4
+      }
+    ],
+    "BenchRequirement": [
+      {
+        "Id": "Arcanebench",
+        "Type": "Crafting",
+        "Categories": [
+          "Arcane_Misc"
+        ]
+      }
+    ]
+  },
+  "Icon": "Icons/ItemsGenerated/Star_Slinger.png"
 }

@@ -1,7 +1,7 @@
 {
   "TranslationProperties": {
-    "Name": "server.items.Star_Node.name",
-    "Description": "server.items.Star_Node.description"
+    "Name": "server.items.Astral_Tether.name",
+    "Description": "server.items.Astral_Tether.description"
   },
   "ItemLevel": 1,
   "Categories": [
@@ -28,7 +28,7 @@
     "Flags": {},
     "Gathering": {
       "Soft": {
-        "ItemId": "Star_Node",
+        "ItemId": "Astral_Tether",
         "IsWeaponBreakable": false
       },
       "Tools": []
@@ -38,7 +38,7 @@
       "Radius": 2,
       "Color": "#a6b"
     },
-    "HitboxType": "Star_Node",
+    "HitboxType": "Astral_Tether",
     "PlacementSettings": {
       "PlaceInEmptyBlocks": true
     },
@@ -62,6 +62,37 @@
       "Block"
     ]
   },
+  "Recipe": {
+    "TimeSeconds": 4,
+    "Input": [
+      {
+        "ItemId": "Ingredient_Fire_Essence",
+        "Quantity": 1
+      },
+      {
+        "ItemId": "Ingredient_Ice_Essence",
+        "Quantity": 1
+      },
+      {
+        "ItemId": "Ingredient_Life_Essence",
+        "Quantity": 1
+      },
+      {
+        "ItemId": "Ingredient_Void_Essence",
+        "Quantity": 1
+      }
+    ],
+    "BenchRequirement": [
+      {
+        "Id": "Arcanebench",
+        "Type": "Crafting",
+        "Categories": [
+          "Arcane_Misc"
+        ]
+      }
+    ],
+    "OutputQuantity": 3
+  },
   "ItemSoundSetId": "ISS_Blocks_Soft",
-  "Icon": "Icons/ItemsGenerated/Star_Node.png"
+  "Icon": "Icons/ItemsGenerated/Astral_Tether.png"
 }

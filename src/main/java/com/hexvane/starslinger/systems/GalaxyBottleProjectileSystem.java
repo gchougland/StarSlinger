@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.systems;
+package com.hexvane.starslinger.systems;
 
 import com.hypixel.hytale.component.AddReason;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -13,7 +13,8 @@ import com.hypixel.hytale.server.core.entity.entities.ProjectileComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hexvane.stargrappler.util.StarNodePlacer;
+import com.hexvane.starslinger.util.AstralTetherPlacer;
+import com.hexvane.starslinger.util.DebugLogger;
 
 import javax.annotation.Nonnull;
 
@@ -49,7 +50,7 @@ public class GalaxyBottleProjectileSystem extends RefSystem<EntityStore> {
             @Nonnull Store<EntityStore> store,
             @Nonnull CommandBuffer<EntityStore> commandBuffer) {
         
-        LOGGER.atInfo().log("[GalaxyBottleProjectileSystem] Projectile removed, reason: %s", reason);
+        DebugLogger.debugInfo(LOGGER, "[GalaxyBottleProjectileSystem] Projectile removed, reason: %s", reason);
         
         ProjectileComponent projectileComponent = store.getComponent(ref, ProjectileComponent.getComponentType());
         if (projectileComponent == null) {
@@ -59,7 +60,7 @@ public class GalaxyBottleProjectileSystem extends RefSystem<EntityStore> {
 
         // Check if this is a Galaxy Bottle projectile
         String projectileId = projectileComponent.getProjectileAssetName();
-        LOGGER.atInfo().log("[GalaxyBottleProjectileSystem] Projectile ID: %s", projectileId);
+        DebugLogger.debugInfo(LOGGER, "[GalaxyBottleProjectileSystem] Projectile ID: %s", projectileId);
         
         if (projectileId == null || !projectileId.equals(GALAXY_BOTTLE_PROJECTILE_ID)) {
             LOGGER.atFine().log("[GalaxyBottleProjectileSystem] Not a Galaxy Bottle projectile");
@@ -74,7 +75,7 @@ public class GalaxyBottleProjectileSystem extends RefSystem<EntityStore> {
         }
 
         Vector3d position = transformComponent.getPosition();
-        LOGGER.atInfo().log("[GalaxyBottleProjectileSystem] Galaxy Bottle hit at %.2f,%.2f,%.2f", 
+        DebugLogger.debugInfo(LOGGER, "[GalaxyBottleProjectileSystem] Galaxy Bottle hit at %.2f,%.2f,%.2f", 
                 position.x, position.y, position.z);
         
         // Get world
@@ -84,12 +85,12 @@ public class GalaxyBottleProjectileSystem extends RefSystem<EntityStore> {
             return;
         }
 
-        // Generate star node field at impact location
+        // Generate astral tether field at impact location
         int x = (int) Math.floor(position.x);
         int y = (int) Math.floor(position.y);
         int z = (int) Math.floor(position.z);
         
-        LOGGER.atInfo().log("[GalaxyBottleProjectileSystem] Generating star node field at %d,%d,%d", x, y, z);
-        StarNodePlacer.generateStarNodeField(world, x, y, z);
+        DebugLogger.debugInfo(LOGGER, "[GalaxyBottleProjectileSystem] Generating astral tether field at %d,%d,%d", x, y, z);
+        AstralTetherPlacer.generateStarNodeField(world, x, y, z);
     }
 }

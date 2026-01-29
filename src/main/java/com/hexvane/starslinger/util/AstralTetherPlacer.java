@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.util;
+package com.hexvane.starslinger.util;
 
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.util.ChunkUtil;
@@ -7,16 +7,17 @@ import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
+import com.hexvane.starslinger.util.DebugLogger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * Utility class for placing Star Nodes in a field around an impact point.
+ * Utility class for placing Astral Tethers in a field around an impact point.
  * Uses Poisson disk sampling for even distribution.
  */
-public class StarNodePlacer {
+public class AstralTetherPlacer {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     private static final float FIELD_RADIUS = 15.0f; // Radius of the star node field (increased to accommodate larger spacing)
     private static final float MIN_DISTANCE = 10.0f; // Minimum distance between star nodes (about 10 blocks apart)
@@ -24,7 +25,7 @@ public class StarNodePlacer {
     private static final int TARGET_NODE_COUNT = 12; // Target number of star nodes
 
     /**
-     * Generates a field of Star Nodes around the given impact position.
+     * Generates a field of Astral Tethers around the given impact position.
      * 
      * @param world World instance
      * @param centerX Center X coordinate
@@ -32,25 +33,25 @@ public class StarNodePlacer {
      * @param centerZ Center Z coordinate
      */
     public static void generateStarNodeField(World world, int centerX, int centerY, int centerZ) {
-        LOGGER.atInfo().log("[StarNodePlacer] Generating star node field at %d,%d,%d", centerX, centerY, centerZ);
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Generating astral tether field at %d,%d,%d", centerX, centerY, centerZ);
         
-        // Get Star Node item to get its block type
-        Item starNodeItem = Item.getAssetMap().getAsset("Star_Node");
+        // Get Astral Tether item to get its block type
+        Item starNodeItem = Item.getAssetMap().getAsset("Astral_Tether");
         if (starNodeItem == null || starNodeItem.getBlockId() == null) {
-            LOGGER.atWarning().log("[StarNodePlacer] Star Node item not found or has no blockId");
-            return; // Star Node item not found
+            LOGGER.atWarning().log("[AstralTetherPlacer] Astral Tether item not found or has no blockId");
+            return; // Astral Tether item not found
         }
         
         String blockId = starNodeItem.getBlockId();
-        LOGGER.atInfo().log("[StarNodePlacer] Star Node blockId: %s", blockId);
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Astral Tether blockId: %s", blockId);
         
         BlockType starNodeBlockType = BlockType.getAssetMap().getAsset(blockId);
         if (starNodeBlockType == null) {
-            LOGGER.atWarning().log("[StarNodePlacer] Star Node block type not found for id: %s", blockId);
+            LOGGER.atWarning().log("[AstralTetherPlacer] Astral Tether block type not found for id: %s", blockId);
             return; // Block type not found
         }
         
-        LOGGER.atInfo().log("[StarNodePlacer] Star Node block type found: %s, hasSupport: %s", 
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Astral Tether block type found: %s, hasSupport: %s", 
                 starNodeBlockType.getId(), starNodeBlockType.hasSupport());
         
         Random random = new Random();
@@ -70,11 +71,11 @@ public class StarNodePlacer {
             }
         }
         
-        LOGGER.atInfo().log("[StarNodePlacer] Placed %d/%d star nodes", placedCount, TARGET_NODE_COUNT);
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Placed %d/%d astral tethers", placedCount, TARGET_NODE_COUNT);
     }
     
     /**
-     * Places a Star Node block at the specified coordinates.
+     * Places a Astral Tether block at the specified coordinates.
      * @return true if block was placed, false otherwise
      */
     private static boolean placeStarNodeBlock(World world, int x, int y, int z, BlockType starNodeBlockType) {
@@ -84,14 +85,14 @@ public class StarNodePlacer {
             WorldChunk chunk = world.getChunkIfInMemory(chunkIndex);
             
             if (chunk == null) {
-                LOGGER.atFine().log("[StarNodePlacer] Chunk not loaded for %d,%d,%d", x, y, z);
+                LOGGER.atFine().log("[AstralTetherPlacer] Chunk not loaded for %d,%d,%d", x, y, z);
                 return false;
             }
             
             // Check if position is valid (air block or empty material)
             BlockType existingBlockType = chunk.getBlockType(x, y, z);
             if (existingBlockType != null && existingBlockType.getMaterial() != BlockMaterial.Empty) {
-                LOGGER.atFine().log("[StarNodePlacer] Position %d,%d,%d is not empty (block: %s)", 
+                LOGGER.atFine().log("[AstralTetherPlacer] Position %d,%d,%d is not empty (block: %s)", 
                         x, y, z, existingBlockType.getId());
                 return false;
             }
@@ -100,7 +101,7 @@ public class StarNodePlacer {
             String blockId = starNodeBlockType.getId();
             int blockIndex = BlockType.getAssetMap().getIndex(blockId);
             if (blockIndex == Integer.MIN_VALUE) {
-                LOGGER.atWarning().log("[StarNodePlacer] Block type %s not found in asset map", blockId);
+                LOGGER.atWarning().log("[AstralTetherPlacer] Block type %s not found in asset map", blockId);
                 return false;
             }
             
@@ -112,20 +113,20 @@ public class StarNodePlacer {
             boolean placed = chunk.setBlock(x, y, z, blockIndex, starNodeBlockType, 0, 0, 8 | 16 | 512);
             
             if (placed) {
-                LOGGER.atInfo().log("[StarNodePlacer] Successfully placed Star Node at %d,%d,%d", x, y, z);
+                DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Successfully placed Astral Tether at %d,%d,%d", x, y, z);
             } else {
-                LOGGER.atWarning().log("[StarNodePlacer] Failed to place Star Node at %d,%d,%d", x, y, z);
+                LOGGER.atWarning().log("[AstralTetherPlacer] Failed to place Astral Tether at %d,%d,%d", x, y, z);
             }
             
             return placed;
         } catch (Exception e) {
-            LOGGER.atWarning().log("[StarNodePlacer] Exception placing block at %d,%d,%d: %s", x, y, z, e.getMessage());
+            LOGGER.atWarning().log("[AstralTetherPlacer] Exception placing block at %d,%d,%d: %s", x, y, z, e.getMessage());
             return false;
         }
     }
 
     /**
-     * Attempts to place a single Star Node using Poisson disk sampling.
+     * Attempts to place a single Astral Tether using Poisson disk sampling.
      */
     private static Point tryPlaceNode(
             Random random,
@@ -140,7 +141,7 @@ public class StarNodePlacer {
         int spawnYMin = groundY + 10; // 10 blocks above ground
         int spawnYMax = groundY + 20; // 20 blocks above ground
         
-        LOGGER.atInfo().log("[StarNodePlacer] Ground level: %d, spawning nodes between Y=%d and Y=%d", 
+        DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Ground level: %d, spawning tethers between Y=%d and Y=%d", 
                 groundY, spawnYMin, spawnYMax);
         
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -198,7 +199,7 @@ public class StarNodePlacer {
                 BlockType blockType = chunk.getBlockType(x, y, z);
                 if (blockType != null && blockType.getMaterial() != BlockMaterial.Empty) {
                     // Found a solid block, ground level is one block above it
-                    LOGGER.atInfo().log("[StarNodePlacer] Found ground at Y=%d (solid block at Y=%d)", y + 1, y);
+                    DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Found ground at Y=%d (solid block at Y=%d)", y + 1, y);
                     return y + 1;
                 }
             } catch (Exception e) {
@@ -207,12 +208,12 @@ public class StarNodePlacer {
         }
         
         // If no ground found, use the impact Y position as fallback
-        LOGGER.atWarning().log("[StarNodePlacer] Could not find ground level, using impact Y=%d", startY);
+        LOGGER.atWarning().log("[AstralTetherPlacer] Could not find ground level, using impact Y=%d", startY);
         return startY;
     }
     
     /**
-     * Checks if a position is valid for placing a Star Node (air block or replaceable).
+     * Checks if a position is valid for placing a Astral Tether (air block or replaceable).
      */
     private static boolean isValidPlacementPosition(World world, int x, int y, int z) {
         try {

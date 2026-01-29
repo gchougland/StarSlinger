@@ -1,4 +1,4 @@
-package com.hexvane.stargrappler.systems;
+package com.hexvane.starslinger.systems;
 
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -18,7 +18,8 @@ import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
-import com.hexvane.stargrappler.components.StarGrapplerConnectionComponent;
+import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
+import com.hexvane.starslinger.util.DebugLogger;
 
 import javax.annotation.Nonnull;
 import java.util.Set;
@@ -27,7 +28,7 @@ import java.util.Set;
  * System that manages Star Grappler physics and connections.
  * Handles launch mode velocity updates and swing mode pendulum physics.
  */
-public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
+public class StarSlingerSystem extends EntityTickingSystem<EntityStore> {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     private static final float UNHOOK_DISTANCE = 1.5f; // Distance threshold for unhooking
     private static final float MAX_CONNECTION_DISTANCE = 30.0f; // Max distance before auto-unhook
@@ -43,7 +44,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
     public Query<EntityStore> getQuery() {
         return Query.and(
                 Player.getComponentType(),
-                StarGrapplerConnectionComponent.getComponentType(),
+                StarSlingerConnectionComponent.getComponentType(),
                 TransformComponent.getComponentType(),
                 Velocity.getComponentType()
         );
@@ -63,12 +64,12 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             @Nonnull Store<EntityStore> store,
             @Nonnull CommandBuffer<EntityStore> commandBuffer) {
         
-        StarGrapplerConnectionComponent connection = archetypeChunk.getComponent(
+        StarSlingerConnectionComponent connection = archetypeChunk.getComponent(
                 index,
-                StarGrapplerConnectionComponent.getComponentType()
+                StarSlingerConnectionComponent.getComponentType()
         );
         
-        if (connection == null || !connection.isConnected() || connection.getStarNodePosition() == null) {
+        if (connection == null || !connection.isConnected() || connection.getAstralTetherPosition() == null) {
             return;
         }
 
@@ -84,12 +85,12 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
         }
 
         Vector3d playerPos = transform.getPosition();
-        Vector3d starNodePos = connection.getStarNodePosition();
+        Vector3d astralTetherPos = connection.getAstralTetherPosition();
         
         // Calculate distance to star node
-        double dx = starNodePos.x - playerPos.x;
-        double dy = starNodePos.y - playerPos.y;
-        double dz = starNodePos.z - playerPos.z;
+        double dx = astralTetherPos.x - playerPos.x;
+        double dy = astralTetherPos.y - playerPos.y;
+        double dz = astralTetherPos.z - playerPos.z;
         double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
         // Check if connection should be broken
@@ -109,7 +110,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             }
             
             // Apply continuous force toward the star node
-            applyLaunchForce(archetypeChunk, index, commandBuffer, playerPos, starNodePos, distance, dt);
+            applyLaunchForce(archetypeChunk, index, commandBuffer, playerPos, astralTetherPos, distance, dt);
         } else {
             // Swing mode: apply pendulum physics with rope length constraint
             double ropeLength = connection.getRopeLength();
@@ -118,7 +119,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
                 ropeLength = distance;
                 connection.setRopeLength(ropeLength);
             }
-            applySwingPhysics(archetypeChunk, index, commandBuffer, connection, transform, playerPos, starNodePos, distance, ropeLength, dt);
+            applySwingPhysics(archetypeChunk, index, commandBuffer, connection, transform, playerPos, astralTetherPos, distance, ropeLength, dt);
         }
     }
 
@@ -131,14 +132,14 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             int index,
             @Nonnull CommandBuffer<EntityStore> commandBuffer,
             Vector3d playerPos,
-            Vector3d starNodePos,
+            Vector3d astralTetherPos,
             double distance,
             float dt) {
         
         // Calculate direction from player to star node
-        double dx = starNodePos.x - playerPos.x;
-        double dy = starNodePos.y - playerPos.y;
-        double dz = starNodePos.z - playerPos.z;
+        double dx = astralTetherPos.x - playerPos.x;
+        double dy = astralTetherPos.y - playerPos.y;
+        double dz = astralTetherPos.z - playerPos.z;
         
         // Normalize direction
         if (distance > 0) {
@@ -198,7 +199,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
         // Use addInstruction with ChangeVelocityType.Add for proper velocity application
         velocity.addInstruction(velocityChange, null, ChangeVelocityType.Add);
         
-        LOGGER.atInfo().log("[StarGrapplerSystem] Applied launch velocity change: %.2f,%.2f,%.2f (desired hSpeed: %.2f, desired vSpeed: %.2f, distance: %.2f, hDist: %.2f, vDist: %.2f)", 
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] Applied launch velocity change: %.2f,%.2f,%.2f (desired hSpeed: %.2f, desired vSpeed: %.2f, distance: %.2f, hDist: %.2f, vDist: %.2f)", 
                 velocityChange.x, velocityChange.y, velocityChange.z, desiredHorizontalSpeed, desiredVerticalSpeed, distance, horizontalDistance, verticalDistance);
     }
     
@@ -218,18 +219,18 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             @Nonnull ArchetypeChunk<EntityStore> archetypeChunk,
             int index,
             @Nonnull CommandBuffer<EntityStore> commandBuffer,
-            @Nonnull StarGrapplerConnectionComponent connection,
+            @Nonnull StarSlingerConnectionComponent connection,
             @Nonnull TransformComponent transform,
             Vector3d playerPos,
-            Vector3d starNodePos,
+            Vector3d astralTetherPos,
             double currentDistance,
             double ropeLength,
             float dt) {
         
         // Calculate radial direction (from node to player)
-        double dx = playerPos.x - starNodePos.x;
-        double dy = playerPos.y - starNodePos.y;
-        double dz = playerPos.z - starNodePos.z;
+        double dx = playerPos.x - astralTetherPos.x;
+        double dy = playerPos.y - astralTetherPos.y;
+        double dz = playerPos.z - astralTetherPos.z;
         
         // Normalize radial direction
         double radialX = 0.0, radialY = 0.0, radialZ = 0.0;
@@ -248,7 +249,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
         Vector3d currentVel = velocity.getVelocity();
         
         // DEBUG: Log current velocity before any modifications
-        LOGGER.atInfo().log("[StarGrapplerSystem] VELOCITY DEBUG: currentVel=(%.2f,%.2f,%.2f), speed=%.2f", 
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] VELOCITY DEBUG: currentVel=(%.2f,%.2f,%.2f), speed=%.2f", 
                 currentVel.x, currentVel.y, currentVel.z, 
                 Math.sqrt(currentVel.x*currentVel.x + currentVel.y*currentVel.y + currentVel.z*currentVel.z));
         
@@ -272,7 +273,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
         double tangentialSpeed = Math.sqrt(
                 tangentialVel.x*tangentialVel.x + tangentialVel.y*tangentialVel.y + tangentialVel.z*tangentialVel.z
         );
-        LOGGER.atInfo().log("[StarGrapplerSystem] VELOCITY DECOMP: radialVel=%.2f, tangentialVel=(%.2f,%.2f,%.2f), tangentialSpeed=%.2f", 
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] VELOCITY DECOMP: radialVel=%.2f, tangentialVel=(%.2f,%.2f,%.2f), tangentialSpeed=%.2f", 
                 radialVelocity, tangentialVel.x, tangentialVel.y, tangentialVel.z, tangentialSpeed);
         
         // Calculate excess distance
@@ -322,7 +323,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             );
             velocity.addInstruction(speedLimitChange, null, ChangeVelocityType.Add);
             
-            LOGGER.atInfo().log("[StarGrapplerSystem] Speed cap applied: %.2f -> %.2f", currentSpeed, maxSpeed);
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] Speed cap applied: %.2f -> %.2f", currentSpeed, maxSpeed);
         }
         
         // Apply constraint when exceeding rope length (with hysteresis)
@@ -330,7 +331,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
         // Where k = spring stiffness (smooth curve based on distance), d = rope length, b = damping, v = radial velocity
         if (shouldApplyConstraint) {
             // Check if player is above the node (player Y > node Y)
-            boolean isAboveNode = playerPos.y > starNodePos.y;
+            boolean isAboveNode = playerPos.y > astralTetherPos.y;
             
             // SPRING FORCE: F_spring = -k * (currentDistance - ropeLength) * direction
             // Use smooth force curve: stiffness increases smoothly with excess distance
@@ -398,7 +399,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             
             double springForceMag = springForceMagnitude;
             double dampingForceMag = Math.abs(dampingForceMagnitude);
-            LOGGER.atInfo().log("[StarGrapplerSystem] Spring-Damper constraint: distance=%.2f > ropeLength=%.2f, excess=%.2f, radialVel=%.2f, stiffness=%.2f, springForce=%.2f, dampingForce=%.2f, totalForce=%.2f, tangentialSpeed=%.2f, dt=%.3f", 
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] Spring-Damper constraint: distance=%.2f > ropeLength=%.2f, excess=%.2f, radialVel=%.2f, stiffness=%.2f, springForce=%.2f, dampingForce=%.2f, totalForce=%.2f, tangentialSpeed=%.2f, dt=%.3f", 
                     currentDistance, ropeLength, excessDistance, radialVelocity,
                     springStiffness, springForceMag, dampingForceMag, totalForceMagnitude, tangentialVel.length(), dt);
         }
@@ -417,7 +418,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
                 horizontalTangentialVel.z * horizontalTangentialVel.z
         );
         
-        LOGGER.atInfo().log("[StarGrapplerSystem] HORIZONTAL BOOST DEBUG: horizontalTangentialVel=(%.2f,0.00,%.2f), speed=%.2f, threshold=0.1", 
+        DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] HORIZONTAL BOOST DEBUG: horizontalTangentialVel=(%.2f,0.00,%.2f), speed=%.2f, threshold=0.1", 
                 horizontalTangentialVel.x, horizontalTangentialVel.z, horizontalTangentialSpeed);
         
         Vector3d horizontalBoost = new Vector3d(0.0, 0.0, 0.0);
@@ -457,7 +458,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
                     horizontalTangentialVel.z / horizontalTangentialSpeed * boostMagnitude
             );
             
-            LOGGER.atInfo().log("[StarGrapplerSystem] APPLYING BOOST: boost=(%.2f,0.00,%.2f), magnitude=%.2f, boostFactor=%.2f", 
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] APPLYING BOOST: boost=(%.2f,0.00,%.2f), magnitude=%.2f, boostFactor=%.2f", 
                     horizontalBoost.x, horizontalBoost.z, boostMagnitude, totalBoostFactor);
             
             // Also ensure minimum horizontal speed is maintained
@@ -475,7 +476,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
                         0.0,
                         horizontalBoost.z + minSpeedBoost.z
                 );
-                LOGGER.atInfo().log("[StarGrapplerSystem] ADDING MIN SPEED BOOST: deficit=%.2f, minSpeedBoost=(%.2f,0.00,%.2f)", 
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] ADDING MIN SPEED BOOST: deficit=%.2f, minSpeedBoost=(%.2f,0.00,%.2f)", 
                         speedDeficit, minSpeedBoost.x, minSpeedBoost.z);
             }
         } else {
@@ -487,7 +488,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             if (horizontalRadialLength > 0.01) {
                 
                 // DEBUG: Log the radial direction and direction toward node
-                LOGGER.atInfo().log("[StarGrapplerSystem] TOWARD NODE CALC: radialDir=(%.2f,%.2f,%.2f), horizontalRadialLen=%.2f, towardNodeDir=(%.2f,0.00,%.2f)", 
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] TOWARD NODE CALC: radialDir=(%.2f,%.2f,%.2f), horizontalRadialLen=%.2f, towardNodeDir=(%.2f,0.00,%.2f)", 
                         radialX, radialY, radialZ, horizontalRadialLength, towardNodeX, towardNodeZ);
                 
                 // Generate horizontal velocity to create pendulum swing TOWARD the node
@@ -514,17 +515,17 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
                         towardNodeZ * totalPush
                 );
                 
-                LOGGER.atInfo().log("[StarGrapplerSystem] GENERATING INITIAL HORIZONTAL MOTION: boost=(%.2f,0.00,%.2f), fallingSpeed=%.2f, excessDist=%.2f, basePush=%.2f, totalPush=%.2f", 
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] GENERATING INITIAL HORIZONTAL MOTION: boost=(%.2f,0.00,%.2f), fallingSpeed=%.2f, excessDist=%.2f, basePush=%.2f, totalPush=%.2f", 
                         horizontalBoost.x, horizontalBoost.z, fallingSpeed, excessDistance, basePush, totalPush);
             } else {
                 // Player is directly above/below node - can't generate horizontal motion
-                LOGGER.atInfo().log("[StarGrapplerSystem] BOOST SKIPPED: horizontalRadialLength=%.2f too small (player directly above/below node)", 
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] BOOST SKIPPED: horizontalRadialLength=%.2f too small (player directly above/below node)", 
                         horizontalRadialLength);
             }
         }
         
         if (horizontalBoost.length() > 0.01) {
-            LOGGER.atInfo().log("[StarGrapplerSystem] APPLYING HORIZONTAL BOOST: boost=(%.2f,0.00,%.2f), magnitude=%.2f", 
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] APPLYING HORIZONTAL BOOST: boost=(%.2f,0.00,%.2f), magnitude=%.2f", 
                     horizontalBoost.x, horizontalBoost.z, horizontalBoost.length());
             velocity.addInstruction(horizontalBoost, null, ChangeVelocityType.Add);
             
@@ -532,10 +533,10 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
             // Note: addInstruction queues the change, so this still shows pre-change velocity
             // But we can at least verify the instruction was queued
             Vector3d afterVel = velocity.getVelocity();
-            LOGGER.atInfo().log("[StarGrapplerSystem] VELOCITY AFTER QUEUING BOOST: vel=(%.2f,%.2f,%.2f), speed=%.2f (NOTE: boost is queued, will apply next tick)", 
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] VELOCITY AFTER QUEUING BOOST: vel=(%.2f,%.2f,%.2f), speed=%.2f (NOTE: boost is queued, will apply next tick)", 
                     afterVel.x, afterVel.y, afterVel.z, Math.sqrt(afterVel.x*afterVel.x + afterVel.y*afterVel.y + afterVel.z*afterVel.z));
         } else {
-            LOGGER.atInfo().log("[StarGrapplerSystem] NO HORIZONTAL BOOST APPLIED: horizontalBoost.length()=%.2f <= 0.01", horizontalBoost.length());
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] NO HORIZONTAL BOOST APPLIED: horizontalBoost.length()=%.2f <= 0.01", horizontalBoost.length());
         }
         
         // WASD MOMENTUM BOOST: Apply additional momentum based on player's look direction
@@ -600,7 +601,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
                         forwardTangential.z * totalMomentumBoost
                 );
                 
-                LOGGER.atInfo().log("[StarGrapplerSystem] WASD MOMENTUM BOOST: forwardDir=(%.2f,0.00,%.2f), tangentialDir=(%.2f,0.00,%.2f), boost=(%.2f,0.00,%.2f), magnitude=%.2f", 
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] WASD MOMENTUM BOOST: forwardDir=(%.2f,0.00,%.2f), tangentialDir=(%.2f,0.00,%.2f), boost=(%.2f,0.00,%.2f), magnitude=%.2f", 
                         forwardX, forwardZ, forwardTangential.x, forwardTangential.z, 
                         wasdMomentumBoost.x, wasdMomentumBoost.z, totalMomentumBoost);
             }
@@ -613,7 +614,7 @@ public class StarGrapplerSystem extends EntityTickingSystem<EntityStore> {
         
         // Enhanced debugging: Log constraint decision details
         if (!shouldApplyConstraint) {
-            LOGGER.atInfo().log("[StarGrapplerSystem] Within rope length: distance=%.2f, ropeLength=%.2f, excess=%.2f, wasPast=%.1f, enterThresh=%.2f, exitThresh=%.2f, tangentialSpeed=%.2f", 
+            DebugLogger.debugInfo(LOGGER, "[StarSlingerSystem] Within rope length: distance=%.2f, ropeLength=%.2f, excess=%.2f, wasPast=%.1f, enterThresh=%.2f, exitThresh=%.2f, tangentialSpeed=%.2f", 
                     currentDistance, ropeLength, excessDistance, wasPastRopeLength ? 1.0 : 0.0, 
                     constraintEnterThreshold, constraintExitThreshold, tangentialVel.length());
         }

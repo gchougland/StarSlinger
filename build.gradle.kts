@@ -60,6 +60,30 @@ tasks.named<ProcessResources>("processResources") {
     inputs.properties(replaceProperties)
 }
 
+// Task to process DebugLogger.java and replace the debug flag placeholder
+tasks.register("processDebugLogger") {
+    group = "build"
+    description = "Processes DebugLogger.java to replace debug flag placeholder"
+    
+    val debugLoggingEnabled = (findProperty("starslinger_debug_logging")?.toString()?.toBoolean() ?: false)
+    val debugLoggerFile = file("src/main/java/com/hexvane/starslinger/util/DebugLogger.java")
+    
+    doLast {
+        if (debugLoggerFile.exists()) {
+            var content = debugLoggerFile.readText()
+            val replacement = if (debugLoggingEnabled) "true" else "false"
+            content = content.replace("\${starslinger_debug_logging}", replacement)
+            debugLoggerFile.writeText(content)
+            println("✅ Processed DebugLogger.java: DEBUG_ENABLED = $replacement")
+        }
+    }
+}
+
+// Make compileJava depend on processDebugLogger
+tasks.named("compileJava") {
+    dependsOn("processDebugLogger")
+}
+
 tasks.withType<Jar> {
     manifest {
         attributes["Specification-Title"] = rootProject.name
