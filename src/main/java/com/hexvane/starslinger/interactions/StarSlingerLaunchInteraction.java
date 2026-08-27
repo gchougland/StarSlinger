@@ -1,10 +1,10 @@
 package com.hexvane.starslinger.interactions;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
-import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.math.vector.Rotation3f;
+import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.protocol.Direction;
 import com.hypixel.hytale.protocol.Interaction;
 import com.hypixel.hytale.protocol.InteractionState;
@@ -13,10 +13,8 @@ import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.protocol.WaitForDataFrom;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.entity.knockback.KnockbackComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.HeadRotation;
-import com.hypixel.hytale.server.core.modules.physics.component.Velocity;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.client.ChargingInteraction;
 import com.hypixel.hytale.server.core.modules.interaction.IInteractionSimulationHandler;
@@ -30,11 +28,12 @@ import com.hypixel.hytale.protocol.SoundCategory;
 import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
 import com.hexvane.starslinger.util.AstralTetherDetector;
 import com.hexvane.starslinger.util.DebugLogger;
+import org.joml.Vector3d;
 
 import javax.annotation.Nonnull;
 
 /**
- * Interaction for left-click launch mechanic of the Star Grappler.
+ * Interaction for left-click launch mechanic of the Star Slinger.
  * Launches the player toward the closest Astral Tether found along a sphere-swept raycast.
  * Uses ChargingInteraction to stay active while button is held.
  */
@@ -142,19 +141,16 @@ public class StarSlingerLaunchInteraction extends ChargingInteraction {
             // Use HeadRotation component for actual head/eye look direction (not body rotation)
             HeadRotation headRotation = commandBuffer.getComponent(entityRef, HeadRotation.getComponentType());
             if (headRotation != null) {
-                com.hypixel.hytale.math.vector.Vector3f headRot = headRotation.getRotation();
-                // HeadRotation stores: x=pitch, y=yaw, z=roll (all in radians)
-                // Direction stores: yaw, pitch, roll
-                lookDirection = new Direction(headRot.getYaw(), headRot.getPitch(), headRot.getRoll());
-                isFromClient = false; // This Direction is from Vector3f, so it's in radians
-                DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Using HeadRotation: yaw=%.2f rad (%.2f°), pitch=%.2f rad (%.2f°)", 
-                        headRot.getYaw(), Math.toDegrees(headRot.getYaw()), 
-                        headRot.getPitch(), Math.toDegrees(headRot.getPitch()));
+                Rotation3f headRot = headRotation.getRotation();
+                lookDirection = new Direction(headRot.yaw(), headRot.pitch(), headRot.roll());
+                isFromClient = false;
+                DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Using HeadRotation: yaw=%.2f rad (%.2f°), pitch=%.2f rad (%.2f°)",
+                        headRot.yaw(), Math.toDegrees(headRot.yaw()),
+                        headRot.pitch(), Math.toDegrees(headRot.pitch()));
             } else {
-                // Fallback to transform rotation if HeadRotation not available
                 LOGGER.atWarning().log("[StarSlingerLaunch] HeadRotation not found, falling back to transform rotation");
-                com.hypixel.hytale.math.vector.Vector3f rotation = transformComponent.getRotation();
-                lookDirection = new Direction(rotation.getYaw(), rotation.getPitch(), rotation.getRoll());
+                Rotation3f rotation = transformComponent.getRotation();
+                lookDirection = new Direction(rotation.yaw(), rotation.pitch(), rotation.roll());
                 isFromClient = false;
             }
         } else {
@@ -164,7 +160,7 @@ public class StarSlingerLaunchInteraction extends ChargingInteraction {
 
         // Get eye position for raycast start (head/hand level, not feet)
         // Use TargetUtil.getLook() which calculates eye position correctly
-        com.hypixel.hytale.math.vector.Transform lookTransform = TargetUtil.getLook(entityRef, commandBuffer);
+        Transform lookTransform = TargetUtil.getLook(entityRef, commandBuffer);
         Vector3d eyePos = lookTransform.getPosition();
         DebugLogger.debugInfo(LOGGER, "[StarSlingerLaunch] Eye position: %.2f, %.2f, %.2f", eyePos.x, eyePos.y, eyePos.z);
 

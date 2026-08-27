@@ -16,8 +16,8 @@ import com.hypixel.hytale.server.core.modules.entity.component.TransformComponen
 import com.hypixel.hytale.server.core.modules.physics.component.Velocity;
 import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
+import com.hypixel.hytale.math.vector.Rotation3f;
+import org.joml.Vector3d;
 import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
 import com.hexvane.starslinger.util.DebugLogger;
 
@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 /**
- * System that manages Star Grappler physics and connections.
+ * System that manages Star Slinger physics and connections.
  * Handles launch mode velocity updates and swing mode pendulum physics.
  */
 public class StarSlingerSystem extends EntityTickingSystem<EntityStore> {
@@ -544,8 +544,8 @@ public class StarSlingerSystem extends EntityTickingSystem<EntityStore> {
         Vector3d wasdMomentumBoost = new Vector3d(0.0, 0.0, 0.0);
         
         // Get player's rotation to determine forward direction
-        Vector3f rotation = transform.getRotation();
-        float yaw = rotation.getYaw();
+        Rotation3f rotation = transform.getRotation();
+        float yaw = rotation.yaw();
         
         // Calculate forward direction from yaw (forward = -sin(yaw), 0, -cos(yaw))
         // Hytale uses standard yaw: 0 = north (+Z), increases clockwise

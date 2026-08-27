@@ -1,13 +1,13 @@
 package com.hexvane.starslinger.util;
 
 import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.protocol.BlockMaterial;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
+import com.hypixel.hytale.server.core.asset.type.blocktype.config.RotationTuple;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
+import com.hypixel.hytale.server.core.universe.world.SetBlockSettings;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
-import com.hexvane.starslinger.util.DebugLogger;
+import com.hypixel.hytale.server.core.util.FillerBlockUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,44 +80,44 @@ public class AstralTetherPlacer {
      */
     private static boolean placeStarNodeBlock(World world, int x, int y, int z, BlockType starNodeBlockType) {
         try {
-            // Get chunk for this block position
-            long chunkIndex = ChunkUtil.indexChunkFromBlock(x, z);
-            WorldChunk chunk = world.getChunkIfInMemory(chunkIndex);
-            
-            if (chunk == null) {
-                LOGGER.atFine().log("[AstralTetherPlacer] Chunk not loaded for %d,%d,%d", x, y, z);
+            BlockType existingBlockType = ChunkSectionBlocks.blockType(world, x, y, z);
+            if (existingBlockType == null) {
+                LOGGER.atFine().log("[AstralTetherPlacer] Section not loaded for %d,%d,%d", x, y, z);
                 return false;
             }
-            
-            // Check if position is valid (air block or empty material)
-            BlockType existingBlockType = chunk.getBlockType(x, y, z);
-            if (existingBlockType != null && existingBlockType.getMaterial() != BlockMaterial.Empty) {
-                LOGGER.atFine().log("[AstralTetherPlacer] Position %d,%d,%d is not empty (block: %s)", 
+            if (existingBlockType.getMaterial() != BlockMaterial.Empty) {
+                LOGGER.atFine().log("[AstralTetherPlacer] Position %d,%d,%d is not empty (block: %s)",
                         x, y, z, existingBlockType.getId());
                 return false;
             }
-            
-            // Get block ID for placement
+
             String blockId = starNodeBlockType.getId();
             int blockIndex = BlockType.getAssetMap().getIndex(blockId);
             if (blockIndex == Integer.MIN_VALUE) {
                 LOGGER.atWarning().log("[AstralTetherPlacer] Block type %s not found in asset map", blockId);
                 return false;
             }
-            
-            // Place the block using settings flags:
-            // Flag 8 (0x08) = Skip filler block placement
-            // Flag 16 (0x10) = Skip filler block breaking  
-            // Flag 512 (0x200) = Skip height update
-            // This allows placement without support validation
-            boolean placed = chunk.setBlock(x, y, z, blockIndex, starNodeBlockType, 0, 0, 8 | 16 | 512);
-            
+
+            boolean placed = ChunkSectionBlocks.setBlock(
+                    world,
+                    x,
+                    y,
+                    z,
+                    blockIndex,
+                    starNodeBlockType,
+                    RotationTuple.NONE_INDEX,
+                    FillerBlockUtil.NO_FILLER,
+                    SetBlockSettings.NO_SET_FILLER
+                            | SetBlockSettings.NO_BREAK_FILLER
+                            | SetBlockSettings.NO_UPDATE_HEIGHTMAP
+            );
+
             if (placed) {
                 DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Successfully placed Astral Tether at %d,%d,%d", x, y, z);
             } else {
                 LOGGER.atWarning().log("[AstralTetherPlacer] Failed to place Astral Tether at %d,%d,%d", x, y, z);
             }
-            
+
             return placed;
         } catch (Exception e) {
             LOGGER.atWarning().log("[AstralTetherPlacer] Exception placing block at %d,%d,%d: %s", x, y, z, e.getMessage());
@@ -189,16 +189,8 @@ public class AstralTetherPlacer {
         
         for (int y = startY; y >= minY; y--) {
             try {
-                long chunkIndex = ChunkUtil.indexChunkFromBlock(x, z);
-                WorldChunk chunk = world.getChunkIfInMemory(chunkIndex);
-                
-                if (chunk == null) {
-                    continue; // Chunk not loaded, skip
-                }
-                
-                BlockType blockType = chunk.getBlockType(x, y, z);
+                BlockType blockType = ChunkSectionBlocks.blockType(world, x, y, z);
                 if (blockType != null && blockType.getMaterial() != BlockMaterial.Empty) {
-                    // Found a solid block, ground level is one block above it
                     DebugLogger.debugInfo(LOGGER, "[AstralTetherPlacer] Found ground at Y=%d (solid block at Y=%d)", y + 1, y);
                     return y + 1;
                 }
@@ -217,19 +209,10 @@ public class AstralTetherPlacer {
      */
     private static boolean isValidPlacementPosition(World world, int x, int y, int z) {
         try {
-            long chunkIndex = ChunkUtil.indexChunkFromBlock(x, z);
-            WorldChunk chunk = world.getChunkIfInMemory(chunkIndex);
-            
-            if (chunk == null) {
-                return false; // Chunk not loaded
-            }
-            
-            BlockType blockType = chunk.getBlockType(x, y, z);
+            BlockType blockType = ChunkSectionBlocks.blockType(world, x, y, z);
             if (blockType == null) {
-                return true; // Air block, valid
+                return false;
             }
-            
-            // Check if block is empty/replaceable
             return blockType.getMaterial() == BlockMaterial.Empty;
         } catch (Exception e) {
             return false;

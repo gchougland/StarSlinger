@@ -10,6 +10,7 @@ import com.hexvane.starslinger.interactions.StarSlingerLaunchInteraction;
 import com.hexvane.starslinger.interactions.StarSlingerSwingInteraction;
 import com.hexvane.starslinger.interactions.GalaxyBottleInteraction;
 import com.hexvane.starslinger.systems.StarSlingerSystem;
+import com.hexvane.starslinger.systems.StarSlingerRopeSystem;
 import com.hexvane.starslinger.systems.AstralTetherParticleSystem;
 import com.hexvane.starslinger.systems.GalaxyBottleProjectileSystem;
 import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
@@ -47,6 +48,7 @@ public class StarSlingerPlugin extends JavaPlugin {
     protected void start() {
         // Register systems (after assets/modules are loaded)
         this.getEntityStoreRegistry().registerSystem(new StarSlingerSystem());
+        this.getEntityStoreRegistry().registerSystem(new StarSlingerRopeSystem());
         this.getEntityStoreRegistry().registerSystem(new AstralTetherParticleSystem());
         this.getEntityStoreRegistry().registerSystem(new GalaxyBottleProjectileSystem());
         

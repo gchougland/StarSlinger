@@ -83,11 +83,11 @@ All items can also be obtained through creative mode.
 
 ### Project Structure
 ```
-StarGrappler/
+StarSlinger/
 ├── src/main/java/com/hexvane/starslinger/
 │   ├── StarSlingerPlugin.java                    # Main plugin class
 │   ├── components/
-│   │   └── StarSlingerConnectionComponent.java   # Tracks grappler connections
+│   │   └── StarSlingerConnectionComponent.java   # Tracks Star Slinger connections
 │   ├── interactions/
 │   │   ├── StarSlingerLaunchInteraction.java    # Left-click launch handler
 │   │   ├── StarSlingerSwingInteraction.java     # Right-click swing handler

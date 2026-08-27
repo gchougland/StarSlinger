@@ -1,23 +1,17 @@
 package com.hexvane.starslinger.util;
 
-import com.hypixel.hytale.math.util.ChunkUtil;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
-import com.hypixel.hytale.math.vector.Vector3i;
+import com.hypixel.hytale.component.ComponentAccessor;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.protocol.Direction;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
-import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.physics.util.PhysicsMath;
-import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.server.core.universe.world.World;
-import com.hexvane.starslinger.util.DebugLogger;
 import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
-import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.component.ComponentAccessor;
-import com.hexvane.starslinger.util.DebugLogger;
+import org.joml.Vector3d;
+import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
 
@@ -198,18 +192,7 @@ public class AstralTetherDetector {
      */
     private static boolean isAstralTether(World world, int x, int y, int z) {
         try {
-            // Get chunk for this block position
-            long chunkIndex = ChunkUtil.indexChunkFromBlock(x, z);
-            WorldChunk chunk = world.getChunkIfInMemory(chunkIndex);
-            
-            if (chunk == null) {
-                return false;
-            }
-            
-            // Get block type at position
-            Vector3i blockPos = new Vector3i(x, y, z);
-            BlockType blockType = chunk.getBlockType(blockPos);
-            
+            BlockType blockType = ChunkSectionBlocks.blockType(world, x, y, z);
             if (blockType == null) {
                 return false;
             }

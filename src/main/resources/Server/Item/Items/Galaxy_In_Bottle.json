@@ -44,9 +44,6 @@
     ],
     "CustomModelScale": 0.5,
     "DrawType": "Model",
-    "Flags": {
-      "IsUsable": true
-    },
     "Gathering": {
       "Harvest": {},
       "Soft": {}

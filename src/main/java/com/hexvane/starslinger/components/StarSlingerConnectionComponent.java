@@ -1,11 +1,13 @@
 package com.hexvane.starslinger.components;
 
+import com.hexvane.starslinger.rope.RopeConstants;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.component.Component;
 import com.hypixel.hytale.component.ComponentType;
-import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.component.Ref;
+import org.joml.Vector3d;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
@@ -21,11 +23,19 @@ public class StarSlingerConnectionComponent implements Component<EntityStore> {
         StarSlingerConnectionComponent cloned = new StarSlingerConnectionComponent();
         cloned.connected = this.connected;
         cloned.launchMode = this.launchMode;
-        cloned.astralTetherPosition = this.astralTetherPosition != null ? new Vector3d(this.astralTetherPosition.x, this.astralTetherPosition.y, this.astralTetherPosition.z) : null;
+        cloned.astralTetherPosition = this.astralTetherPosition != null
+            ? new Vector3d(this.astralTetherPosition.x, this.astralTetherPosition.y, this.astralTetherPosition.z)
+            : null;
         cloned.connectionTick = this.connectionTick;
         cloned.ropeLength = this.ropeLength;
         cloned.wasPastRopeLength = this.wasPastRopeLength;
         cloned.ticksSinceLastCorrection = this.ticksSinceLastCorrection;
+        cloned.ropeSimActive = this.ropeSimActive;
+        for (int i = 0; i < RopeConstants.NODE_COUNT; i++) {
+            cloned.nodePositions[i].set(this.nodePositions[i]);
+            cloned.nodeOldPositions[i].set(this.nodeOldPositions[i]);
+        }
+        System.arraycopy(this.segmentRefs, 0, cloned.segmentRefs, 0, this.segmentRefs.length);
         return cloned;
     }
     private static ComponentType<EntityStore, StarSlingerConnectionComponent> componentType;
@@ -89,7 +99,23 @@ public class StarSlingerConnectionComponent implements Component<EntityStore> {
     private boolean wasPastRopeLength = false; // Hysteresis: track if we were past rope length last tick
     private int ticksSinceLastCorrection = 0; // Cooldown: don't correct every single tick
 
+    private boolean ropeSimActive = false;
+
+    @Nonnull
+    private final Vector3d[] nodePositions = new Vector3d[RopeConstants.NODE_COUNT];
+
+    @Nonnull
+    private final Vector3d[] nodeOldPositions = new Vector3d[RopeConstants.NODE_COUNT];
+
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    private final Ref<EntityStore>[] segmentRefs = new Ref[RopeConstants.SEGMENT_COUNT];
+
     public StarSlingerConnectionComponent() {
+        for (int i = 0; i < RopeConstants.NODE_COUNT; i++) {
+            nodePositions[i] = new Vector3d();
+            nodeOldPositions[i] = new Vector3d();
+        }
     }
 
     @Nonnull
@@ -156,5 +182,28 @@ public class StarSlingerConnectionComponent implements Component<EntityStore> {
 
     public void setTicksSinceLastCorrection(int ticksSinceLastCorrection) {
         this.ticksSinceLastCorrection = ticksSinceLastCorrection;
+    }
+
+    public boolean isRopeSimActive() {
+        return ropeSimActive;
+    }
+
+    public void setRopeSimActive(boolean ropeSimActive) {
+        this.ropeSimActive = ropeSimActive;
+    }
+
+    @Nonnull
+    public Vector3d[] getNodePositions() {
+        return nodePositions;
+    }
+
+    @Nonnull
+    public Vector3d[] getNodeOldPositions() {
+        return nodeOldPositions;
+    }
+
+    @Nonnull
+    public Ref<EntityStore>[] getSegmentRefs() {
+        return segmentRefs;
     }
 }

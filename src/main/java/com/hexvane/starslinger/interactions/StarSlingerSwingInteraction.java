@@ -3,7 +3,8 @@ package com.hexvane.starslinger.interactions;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.math.vector.Rotation3f;
+import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.protocol.Direction;
 import com.hypixel.hytale.protocol.Interaction;
 import com.hypixel.hytale.protocol.InteractionState;
@@ -27,11 +28,12 @@ import com.hypixel.hytale.protocol.SoundCategory;
 import com.hexvane.starslinger.components.StarSlingerConnectionComponent;
 import com.hexvane.starslinger.util.AstralTetherDetector;
 import com.hexvane.starslinger.util.DebugLogger;
+import org.joml.Vector3d;
 
 import javax.annotation.Nonnull;
 
 /**
- * Interaction for right-click swing mechanic of the Star Grappler.
+ * Interaction for right-click swing mechanic of the Star Slinger.
  * Hooks onto a Star Node and allows swinging like a rope/pendulum.
  * Uses ChargingInteraction to stay active while button is held.
  */
@@ -137,18 +139,18 @@ public class StarSlingerSwingInteraction extends ChargingInteraction {
             DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Client look direction is null, using HeadRotation component");
             HeadRotation headRotation = commandBuffer.getComponent(entityRef, HeadRotation.getComponentType());
             if (headRotation != null) {
-                com.hypixel.hytale.math.vector.Vector3f headRot = headRotation.getRotation();
-                lookDirection = new Direction(headRot.getYaw(), headRot.getPitch(), headRot.getRoll());
+                Rotation3f headRot = headRotation.getRotation();
+                lookDirection = new Direction(headRot.yaw(), headRot.pitch(), headRot.roll());
                 isFromClient = false;
             } else {
-                com.hypixel.hytale.math.vector.Vector3f rotation = transformComponent.getRotation();
-                lookDirection = new Direction(rotation.getYaw(), rotation.getPitch(), rotation.getRoll());
+                Rotation3f rotation = transformComponent.getRotation();
+                lookDirection = new Direction(rotation.yaw(), rotation.pitch(), rotation.roll());
                 isFromClient = false;
             }
         }
 
         // Get eye position for raycast start
-        com.hypixel.hytale.math.vector.Transform lookTransform = TargetUtil.getLook(entityRef, commandBuffer);
+        Transform lookTransform = TargetUtil.getLook(entityRef, commandBuffer);
         Vector3d eyePos = lookTransform.getPosition();
         DebugLogger.debugInfo(LOGGER, "[StarSlingerSwing] Eye position: %.2f, %.2f, %.2f", eyePos.x, eyePos.y, eyePos.z);
 
