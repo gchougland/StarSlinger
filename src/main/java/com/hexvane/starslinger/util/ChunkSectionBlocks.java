@@ -19,9 +19,10 @@ public final class ChunkSectionBlocks {
 
     @Nullable
     public static Ref<ChunkStore> sectionRefAt(@Nonnull World world, int x, int y, int z) {
-        if (y < ChunkUtil.MIN_Y || y > ChunkUtil.HEIGHT_MINUS_1) {
+        if (y < ChunkUtil.MIN_Y) {
             return null;
         }
+        // No upper height limit since Hytale 0.7.0: a section that does not exist comes back null.
         Ref<ChunkStore> sectionRef = world.getChunkStore().getChunkSectionReferenceAtBlock(x, y, z);
         if (sectionRef == null || !sectionRef.isValid()) {
             return null;

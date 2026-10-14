@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.0] - 10/12/2026
+
+### Changed
+
+- **Hytale Update 7** — Star Slinger now runs on Hytale Update 7 (0.7.0).
+
 ## [1.1.0] - 8/27/2026
 
 ### Changed
